@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { ref } from 'vue'
 import { mount } from '@vue/test-utils'
-import App from './app.vue'
+import DefaultLayout from './default.vue'
 
-// app.vue は Nuxt のコンポーザブル(useRuntimeConfig / useFetch)を auto-import 前提で使う。
+// default.vue は Nuxt のコンポーザブル(useRuntimeConfig / useFetch)を auto-import 前提で使う。
 // ここでは Nuxt ランタイムを起動せず、これらをグローバルにモックして検証する。
 const useFetchMock = vi.fn()
 
@@ -13,17 +13,16 @@ vi.stubGlobal('useRuntimeConfig', () => ({
 vi.stubGlobal('useFetch', useFetchMock)
 
 // Nuxt 提供コンポーネントは中身を持たないスタブに差し替える
-const mountApp = () =>
-  mount(App, {
+const mountLayout = () =>
+  mount(DefaultLayout, {
     global: {
       stubs: {
-        NuxtRouteAnnouncer: true,
-        NuxtPage: true,
+        NuxtLink: true,
       },
     },
   })
 
-describe('app.vue（backend 疎通表示）', () => {
+describe('default.vue（backend 疎通表示）', () => {
   beforeEach(() => {
     useFetchMock.mockReset()
   })
@@ -34,7 +33,7 @@ describe('app.vue（backend 疎通表示）', () => {
       error: ref(null),
     })
 
-    const wrapper = mountApp()
+    const wrapper = mountLayout()
 
     expect(wrapper.get('[data-testid="backend-status"]').text()).toContain('ok')
   })
@@ -45,7 +44,7 @@ describe('app.vue（backend 疎通表示）', () => {
       error: ref(new Error('connection refused')),
     })
 
-    const wrapper = mountApp()
+    const wrapper = mountLayout()
 
     expect(wrapper.get('[data-testid="backend-status"]').text()).toContain(
       '接続失敗',
