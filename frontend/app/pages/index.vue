@@ -1,27 +1,20 @@
-<script setup lang="ts">
-// nuxt.config.ts と .env の公開設定から、Flask APIの基本URLを読み込む
-const config = useRuntimeConfig()
-
-// Flaskの /api/botttles にデータを要求し、成功時は botttles、失敗時は error に結果を入れる
-const { data: botttles, error } = await useFetch(
-  `${config.public.apiBase}/api/botttles`
-)
-</script>
-
 <template>
-  <div>
-    <p>top page (placeholder)</p>
-
-    <p v-if="error">
-      データの取得に失敗しました: {{ error.message }}
+  <div class="max-w-3xl mx-auto text-center py-24 px-4">
+    <h1 class="text-3xl font-bold mb-4">チャットボットを売り買いしよう</h1>
+    <p class="text-gray-600 mb-8">
+      あなたの作ったチャットボットを出品、または他のボットを購入できます。
     </p>
-
-    <ul v-else-if="botttles">
-      <li v-for="botttle in botttles" :key="botttle.id">
-        {{ botttle }}
-      </li>
-    </ul>
-
-    <p v-else>データを読み込み中です。</p>
+    <NuxtLink
+      to="/main"
+      class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700"
+    >
+      マーケットを見る
+    </NuxtLink>
+    <NuxtLink
+      to="/login"
+      class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700"
+    >
+      ログインする
+    </NuxtLink>
   </div>
 </template>
