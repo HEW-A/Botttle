@@ -4,23 +4,15 @@
       <span class="text-2xl tracking-wide">botttle</span>
       <nav class="flex flex-wrap items-center gap-3 md:gap-5">
         <a href="#how" class="text-sm whitespace-nowrap hover:text-blue-600">使い方</a>
-        <NuxtLink
-          to="/main"
-          class="inline-flex items-center whitespace-nowrap rounded-md border border-gray-200 px-4 py-2 text-sm font-medium hover:bg-gray-50"
-        >
-          ゲストでマーケットを見る
-        </NuxtLink>
-        <NuxtLink
-          to="/login"
-          class="inline-flex items-center whitespace-nowrap rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-        >
-          ログイン
-        </NuxtLink>
+        <CommonAppButton to="/main" variant="outline">ゲストでマーケットを見る</CommonAppButton>
+        <CommonAppButton to="/login" variant="primary">ログイン</CommonAppButton>
       </nav>
     </header>
 
     <main class="flex-1">
-      <section class="mx-auto grid max-w-6xl grid-cols-1 items-center gap-8 px-6 py-12 md:grid-cols-2 md:py-16">
+      <section
+        class="mx-auto grid max-w-6xl grid-cols-1 items-center gap-8 px-6 py-12 md:grid-cols-[3fr_2fr] md:py-16"
+      >
         <div>
           <span class="mb-4 inline-block rounded bg-blue-100 px-3 py-1 text-xs text-blue-700">
             テキスト・PDFからボットが作れる、CtoCマーケット
@@ -29,22 +21,12 @@
             あなたのチャットボットを、<br />
             つくる。売る。買う。
           </h1>
-          <p class="mb-6 max-w-md text-lg leading-relaxed text-gray-600">
-            手持ちのテキストやPDFをアップロードするだけで、専用チャットボットが完成。そのまま自分で使うのも、マーケットで他の人に届けるのも自由です。
+          <p class="mb-6 text-lg leading-relaxed text-gray-600">
+            手持ちのテキストやPDFをアップロードするだけで、<br>専用チャットボットが完成。そのまま自分で使うのも、<br>マーケットで他の人に届けるのも自由です。
           </p>
           <div class="mb-6 flex flex-wrap gap-4">
-            <NuxtLink
-              to="/login"
-              class="inline-flex items-center rounded-md bg-blue-600 px-6 py-3 text-base font-medium text-white hover:bg-blue-700"
-            >
-              ログインして始める
-            </NuxtLink>
-            <NuxtLink
-              to="/main"
-              class="inline-flex items-center rounded-md border border-gray-200 px-6 py-3 text-base font-medium hover:bg-gray-50"
-            >
-              ゲストとしてマーケットを見る
-            </NuxtLink>
+            <CommonAppButton to="/login" variant="primary" size="lg">ログインして始める</CommonAppButton>
+            <CommonAppButton to="/main" variant="outline" size="lg">ゲストとしてマーケットを見る</CommonAppButton>
           </div>
           <div class="flex flex-wrap gap-3">
             <span class="rounded border border-blue-600 px-3 py-1 text-xs text-blue-600">テキスト/PDF読込</span>
@@ -68,17 +50,17 @@
           <div class="rounded border border-gray-200 p-4 shadow-sm">
             <div class="text-xs font-semibold tracking-wider text-blue-600">STEP 01</div>
             <div class="mt-2 text-lg font-semibold">テキスト・PDFをアップロード</div>
-            <p class="mt-2 text-sm text-gray-600">FAQ、マニュアル、資料などをそのまま投入するだけ。前処理は不要です。</p>
+            <p class="mt-2 text-sm text-gray-600">FAQ、マニュアル、資料などをそのまま投入する<br>だけ。前処理は不要です。</p>
           </div>
           <div class="rounded border border-gray-200 p-4 shadow-sm">
             <div class="text-xs font-semibold tracking-wider text-blue-600">STEP 02</div>
             <div class="mt-2 text-lg font-semibold">チャットボットが自動生成</div>
-            <p class="mt-2 text-sm text-gray-600">内容を理解した専用ボットが数分で完成。テスト会話ですぐ確認できます。</p>
+            <p class="mt-2 text-sm text-gray-600">内容を理解した専用ボットが数分で完成。<br>テスト会話ですぐ確認できます。</p>
           </div>
           <div class="rounded border border-gray-200 p-4 shadow-sm">
             <div class="text-xs font-semibold tracking-wider text-blue-600">STEP 03</div>
             <div class="mt-2 text-lg font-semibold">マーケットで売買・活用</div>
-            <p class="mt-2 text-sm text-gray-600">自分で使うも良し、マーケットに出品して他のユーザーに届けるも良し。</p>
+            <p class="mt-2 text-sm text-gray-600">自分で使うも良し、マーケットに出品して<br>他のユーザーに届けるも良し。</p>
           </div>
         </div>
       </section>
@@ -87,24 +69,14 @@
         <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-6">
           <h2 class="text-2xl font-semibold">まずはゲストでマーケットを覗いてみませんか？</h2>
           <div class="flex flex-wrap gap-4">
-            <NuxtLink
-              to="/main"
-              class="inline-flex items-center rounded-md border border-white px-4 py-2 text-sm font-medium text-white hover:bg-white/10"
-            >
-              ゲストとしてマーケットを見る
-            </NuxtLink>
-            <NuxtLink
-              to="/login"
-              class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-            >
-              ログイン
-            </NuxtLink>
+            <CommonAppButton to="/main" variant="outline-white">ゲストとしてマーケットを見る</CommonAppButton>
+            <CommonAppButton to="/login" variant="primary">ログイン</CommonAppButton>
           </div>
         </div>
       </section>
     </main>
 
-    <footer class="border-t border-gray-200 px-6 py-6 text-center text-sm text-gray-400">© 2026 botttle</footer>
+    <CommonAppFooter />
   </div>
 </template>
 

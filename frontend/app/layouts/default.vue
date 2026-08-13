@@ -33,8 +33,6 @@ const { data, error } = useFetch<{ status: string }>(`${apiBase}/api/health`)
       <slot />
     </main>
 
-    <footer class="text-center text-xs text-gray-400 py-4">
-      © 2026 BotArena
-    </footer>
+    <CommonAppFooter />
   </div>
 </template>
