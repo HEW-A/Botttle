@@ -13,7 +13,9 @@
 
   GET  /battles/{battle_id}         そのバトルの投票結果・勝者を取得
   GET  /battles                     全バトル一覧
-  GET  /leaderboard                 ポイントランキング
+  GET  /leaderboard                 ボット別ランキング(何種類の異なるボットに勝ったか)
+
+  ※ 同じボットの組み合わせは arena_core.COOLDOWN で指定した期間内は再戦不可
 """
 
 import asyncio
@@ -63,7 +65,7 @@ class Handler(BaseHTTPRequestHandler):
             if self.path == "/battles":
                 self._send_json(200, arena.list_battles())
             elif self.path == "/leaderboard":
-                self._send_json(200, arena.leaderboard())
+                self._send_json(200, arena.bot_leaderboard())
             elif (m := ROUTE_BATTLE.match(self.path)):
                 result = arena.get_result(m.group(1))
                 self._send_json(200, result)

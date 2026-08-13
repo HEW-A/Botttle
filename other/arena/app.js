@@ -242,7 +242,7 @@ async function loadLeaderboard() {
   try {
     const ranking = await api("/leaderboard");
     if (!ranking.length) {
-      list.innerHTML = `<p class="empty-state">まだ投票がありません</p>`;
+      list.innerHTML = `<p class="empty-state">まだ対戦がありません</p>`;
       return;
     }
     list.innerHTML = "";
@@ -250,8 +250,8 @@ async function loadLeaderboard() {
       const li = document.createElement("li");
       li.innerHTML = `
         <span class="lb-rank">#${i + 1}</span>
-        <span class="lb-user">${escapeHtml(entry.user_id)}</span>
-        <span class="lb-points">${entry.points} pt</span>
+        <span class="lb-user">${escapeHtml(entry.bot_name)}</span>
+        <span class="lb-points">${entry.defeated_count} 種撃破</span>
       `;
       list.appendChild(li);
     });
