@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHATBOT ARENA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">⚔</span>
+    <h1>CHATBOT<span>ARENA</span></h1>
+  </div>
+  <div class="api-config">
+    <label for="apiBase">API</label>
+    <input id="apiBase" type="text" value="http://localhost:8000" spellcheck="false">
+    <span id="apiStatus" class="dot dot-unknown" title="接続状態"></span>
+  </div>
+  <nav class="tabs">
+    <button class="tab-btn active" data-view="battle">対戦</button>
+    <button class="tab-btn" data-view="history">履歴</button>
+    <button class="tab-btn" data-view="leaderboard">ランキング</button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ============ 対戦ビュー ============ -->
+  <section id="view-battle" class="view active">
+
+    <form id="matchForm" class="match-form">
+      <textarea id="questionInput" placeholder="質問を入力…" rows="2" required></textarea>
+      <div class="bot-inputs">
+        <input id="botA" type="text" placeholder="Bot A の名前" value="GPT-mini" required>
+        <span class="vs-small">VS</span>
+        <input id="botB" type="text" placeholder="Bot B の名前" value="Claude-mini" required>
+      </div>
+      <button type="submit" id="startBtn" class="primary-btn">
+        <span class="btn-label">対戦開始</span>
+        <span class="btn-spinner" hidden></span>
+      </button>
+    </form>
+
+    <div id="battleStage" class="battle-stage" hidden>
+      <div class="question-banner">
+        <span class="q-label">Q</span>
+        <p id="questionEcho"></p>
+      </div>
+
+      <div class="arena-grid">
+        <article class="fighter fighter-a" data-choice="a">
+          <header class="fighter-head">
+            <span class="fighter-tag">A</span>
+            <h2 id="nameA"></h2>
+          </header>
+          <p class="fighter-response" id="responseA"></p>
+          <div class="vote-bar">
+            <div class="vote-bar-fill fill-a" id="barA" style="width:0%"></div>
+          </div>
+          <span class="vote-count" id="countA">0票</span>
+          <button class="vote-btn vote-btn-a" data-choice="a">A に投票</button>
+        </article>
+
+        <div class="vs-divider">
+          <span>VS</span>
+        </div>
+
+        <article class="fighter fighter-b" data-choice="b">
+          <header class="fighter-head">
+            <span class="fighter-tag">B</span>
+            <h2 id="nameB"></h2>
+          </header>
+          <p class="fighter-response" id="responseB"></p>
+          <div class="vote-bar">
+            <div class="vote-bar-fill fill-b" id="barB" style="width:0%"></div>
+          </div>
+          <span class="vote-count" id="countB">0票</span>
+          <button class="vote-btn vote-btn-b" data-choice="b">B に投票</button>
+        </article>
+      </div>
+
+      <div class="tie-row">
+        <button class="vote-btn vote-btn-tie" data-choice="tie">引き分けに投票</button>
+        <span class="vote-count" id="countTie">0票</span>
+      </div>
+
+      <div class="voter-row">
+        <label for="userId">投票者ID</label>
+        <input id="userId" type="text" placeholder="user-001" value="guest">
+      </div>
+
+      <p id="voteMessage" class="vote-message"></p>
+      <p id="winnerBanner" class="winner-banner" hidden></p>
+    </div>
+  </section>
+
+  <!-- ============ 履歴ビュー ============ -->
+  <section id="view-history" class="view">
+    <div class="section-head">
+      <h2>対戦履歴</h2>
+      <button id="refreshHistory" class="ghost-btn">更新</button>
+    </div>
+    <div id="historyList" class="history-list"></div>
+  </section>
+
+  <!-- ============ ランキングビュー ============ -->
+  <section id="view-leaderboard" class="view">
+    <div class="section-head">
+      <h2>投票者ランキング</h2>
+      <button id="refreshLeaderboard" class="ghost-btn">更新</button>
+    </div>
+    <ol id="leaderboardList" class="leaderboard-list"></ol>
+  </section>
+
+</main>
+
+<div id="toast" class="toast" hidden></div>
+
+<script src="app.js"></script>
+</body>
+</html>
