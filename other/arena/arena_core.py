@@ -7,9 +7,12 @@ Webフレームワークに依存しない部分をここに切り出してる�
 """
 
 from uuid import uuid4
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Optional, Literal
 import asyncio
+
+# 同じボットの組み合わせの再戦禁止期間
+COOLDOWN = timedelta(hours=1)
 
 
 async def call_bot(bot_name: str, question: str) -> str:
@@ -25,13 +28,31 @@ class Arena:
     def __init__(self):
         self.battles: dict[str, dict] = {}
         self.user_points: dict[str, int] = {}
+        # 組み合わせ(順不同)ごとの最終対戦時刻。クールダウン判定に使う。
+        self.pair_last_battle: dict[frozenset, datetime] = {}
+
+    def _check_cooldown(self, bot_a: str, bot_b: str) -> None:
+        pair_key = frozenset({bot_a, bot_b})
+        last = self.pair_last_battle.get(pair_key)
+        if last is None:
+            return
+        elapsed = datetime.now(timezone.utc) - last
+        if elapsed < COOLDOWN:
+            remaining = COOLDOWN - elapsed
+            remaining_min = int(remaining.total_seconds() // 60) + 1
+            raise ValueError(
+                f"このボットの組み合わせはクールダウン中です。あと約{remaining_min}分後に再戦可能です。"
+            )
 
     async def create_battle(self, question: str, bot_a: str, bot_b: str) -> dict:
+        self._check_cooldown(bot_a, bot_b)
+
         response_a, response_b = await asyncio.gather(
             call_bot(bot_a, question),
             call_bot(bot_b, question),
         )
         battle_id = str(uuid4())
+        now = datetime.now(timezone.utc)
         self.battles[battle_id] = {
             "question": question,
             "bot_a": bot_a,
@@ -40,8 +61,9 @@ class Arena:
             "response_b": response_b,
             "votes": {"a": 0, "b": 0, "tie": 0},
             "voters": set(),
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_at": now.isoformat(),
         }
+        self.pair_last_battle[frozenset({bot_a, bot_b})] = now
         return {
             "battle_id": battle_id,
             "question": question,
@@ -61,17 +83,21 @@ class Arena:
         self.user_points[user_id] = self.user_points.get(user_id, 0) + 1
         return dict(battle["votes"])
 
+    @staticmethod
+    def _determine_winner(votes: dict) -> Optional[str]:
+        if not any(votes.values()):
+            return None
+        top_count = max(votes.values())
+        top = [k for k, v in votes.items() if v == top_count]
+        return top[0] if len(top) == 1 else "tie"
+
     def get_result(self, battle_id: str) -> dict:
         battle = self.battles.get(battle_id)
         if battle is None:
             raise KeyError("battle not found")
 
         votes = battle["votes"]
-        winner: Optional[str] = None
-        if any(votes.values()):
-            top_count = max(votes.values())
-            top = [k for k, v in votes.items() if v == top_count]
-            winner = top[0] if len(top) == 1 else "tie"
+        winner = self._determine_winner(votes)
 
         return {
             "battle_id": battle_id,
@@ -87,6 +113,31 @@ class Arena:
     def leaderboard(self) -> list[dict]:
         ranking = sorted(self.user_points.items(), key=lambda x: x[1], reverse=True)
         return [{"user_id": u, "points": p} for u, p in ranking]
+
+    def bot_leaderboard(self) -> list[dict]:
+        """ボットごとに『何種類の異なるボットを倒したか』でランキングする。
+        同じ相手に複数回勝っても1カウントのまま(ユニーク撃破数)。"""
+        defeated: dict[str, set[str]] = {}
+        all_bots: set[str] = set()
+
+        for battle in self.battles.values():
+            all_bots.add(battle["bot_a"])
+            all_bots.add(battle["bot_b"])
+
+            winner = self._determine_winner(battle["votes"])
+            if winner not in ("a", "b"):
+                continue  # 引き分け・未投票はカウント対象外
+
+            winner_name = battle["bot_a"] if winner == "a" else battle["bot_b"]
+            loser_name = battle["bot_b"] if winner == "a" else battle["bot_a"]
+            defeated.setdefault(winner_name, set()).add(loser_name)
+
+        ranking = [
+            {"bot_name": bot, "defeated_count": len(defeated.get(bot, set()))}
+            for bot in all_bots
+        ]
+        ranking.sort(key=lambda x: x["defeated_count"], reverse=True)
+        return ranking
 
     def list_battles(self) -> list[dict]:
         return [
