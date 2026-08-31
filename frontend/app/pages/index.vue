@@ -3,9 +3,13 @@
     <header class="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
       <span class="text-2xl tracking-wide">botttle</span>
       <nav class="flex flex-wrap items-center gap-3 md:gap-5">
-        <a href="#how" class="text-sm whitespace-nowrap hover:text-blue-600">使い方</a>
-        <CommonAppButton to="/main" variant="outline">ゲストでマーケットを見る</CommonAppButton>
-        <CommonAppButton to="/login" variant="primary">ログイン</CommonAppButton>
+        <NuxtLink to="/main" class="text-sm whitespace-nowrap text-gray-600 hover:text-blue-600">
+          ゲストとして始める
+        </NuxtLink>
+        <div class="flex items-center gap-2">
+          <CommonAppButton to="/login?tab=register" variant="primary">新規登録</CommonAppButton>
+          <CommonAppButton to="/login" variant="outline">ログイン</CommonAppButton>
+        </div>
       </nav>
     </header>
 
@@ -24,10 +28,13 @@
           <p class="mb-6 text-lg leading-relaxed text-gray-600">
             手持ちのテキストやPDFをアップロードするだけで、<br>専用チャットボットが完成。そのまま自分で使うのも、<br>マーケットで他の人に届けるのも自由です。
           </p>
-          <div class="mb-6 flex flex-wrap gap-4">
-            <CommonAppButton to="/login" variant="primary" size="lg">ログインして始める</CommonAppButton>
-            <CommonAppButton to="/main" variant="outline" size="lg">ゲストとしてマーケットを見る</CommonAppButton>
+          <div class="mb-3 flex flex-wrap gap-4">
+            <CommonAppButton to="/login?tab=register" variant="primary" size="lg">新規登録</CommonAppButton>
+            <CommonAppButton to="/login" variant="outline" size="lg">ログイン</CommonAppButton>
           </div>
+          <NuxtLink to="/main" class="mb-6 inline-block text-sm text-blue-600 hover:underline">
+            → ゲストとしてマーケットを見る
+          </NuxtLink>
           <div class="flex flex-wrap gap-3">
             <span class="rounded border border-blue-600 px-3 py-1 text-xs text-blue-600">テキスト/PDF読込</span>
             <span class="rounded border border-blue-600 px-3 py-1 text-xs text-blue-600">ボットの売買</span>
@@ -67,11 +74,8 @@
 
       <section class="mt-6 bg-slate-700 px-6 py-12 text-white md:py-16">
         <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-6">
-          <h2 class="text-2xl font-semibold">まずはゲストでマーケットを覗いてみませんか？</h2>
-          <div class="flex flex-wrap gap-4">
-            <CommonAppButton to="/main" variant="outline-white">ゲストとしてマーケットを見る</CommonAppButton>
-            <CommonAppButton to="/login" variant="primary">ログイン</CommonAppButton>
-          </div>
+          <h2 class="text-2xl font-semibold">まずはゲストとしてマーケットを見てみませんか？</h2>
+          <CommonAppButton to="/main" variant="outline-white">ゲストとしてマーケットを見る</CommonAppButton>
         </div>
       </section>
     </main>
