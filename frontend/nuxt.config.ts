@@ -9,4 +9,8 @@ export default defineNuxtConfig({
       apiBase: 'http://localhost:5000',
     },
   },
+  routeRules: {
+    // /register ページは作成せず、/login の新規登録タブに統合しているため
+    '/register': { redirect: '/login?tab=register' },
+  },
 })
