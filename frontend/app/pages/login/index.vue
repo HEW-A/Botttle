@@ -106,6 +106,7 @@
             v-model="signupPassword"
             type="password"
             required
+            minlength="8"
             placeholder="8文字以上"
             class="mb-3 w-full border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline focus:outline-2 focus:outline-blue-600"
           />
@@ -188,27 +189,33 @@ const signupEmail = ref('')
 const signupLoading = ref(false)
 const signupError = ref('')
 
+const authStore = useAuthStore()
+
 async function handleLogin() {
   loginLoading.value = true
   loginError.value = ''
 
-  // Supabase連携前の仮ロジック
-  // 実際は const { error } = await supabase.auth.signInWithPassword({ email, password })
-  setTimeout(() => {
-    loginLoading.value = false
+  try {
+    await authStore.login(loginUserId.value, loginPassword.value)
     router.push('/main')
-  }, 800)
+  } catch (e) {
+    loginError.value = e?.data?.error ?? 'ログインに失敗しました'
+  } finally {
+    loginLoading.value = false
+  }
 }
 
 async function handleSignup() {
   signupLoading.value = true
   signupError.value = ''
 
-  // Supabase連携前の仮ロジック
-  // 実際は const { error } = await supabase.auth.signUp({ email, password })
-  setTimeout(() => {
-    signupLoading.value = false
+  try {
+    await authStore.signup(signupUserId.value, signupUsername.value, signupPassword.value, signupEmail.value)
     router.push('/main')
-  }, 800)
+  } catch (e) {
+    signupError.value = e?.data?.error ?? '登録に失敗しました'
+  } finally {
+    signupLoading.value = false
+  }
 }
 </script>
