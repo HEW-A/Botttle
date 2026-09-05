@@ -1,12 +1,12 @@
 <template>
   <header class="sticky top-0 z-50 border-b border-slate-200 bg-white font-['M_PLUS_1_Code']">
     <nav class="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 md:px-6">
-      <NuxtLink to="/main" class="text-lg font-bold text-blue-600">
-        Botttle
+      <NuxtLink to="/main" class="text-2xl tracking-wide">
+        botttle
       </NuxtLink>
 
-      <div class="hidden items-center gap-4 md:flex">
-        <a href="#" class="text-sm whitespace-nowrap text-slate-700 hover:text-blue-600">ランキング</a>
+      <div v-if="!hideRanking || isLoggedIn" class="hidden items-center gap-4 md:flex">
+        <a v-if="!hideRanking" href="#" class="text-sm whitespace-nowrap text-slate-700 hover:text-blue-600">ランキング</a>
         <template v-if="isLoggedIn">
           <a href="#" class="text-sm whitespace-nowrap text-slate-700 hover:text-blue-600">BotArena</a>
           <a href="#" class="text-sm whitespace-nowrap text-slate-700 hover:text-blue-600">ボットを作成する</a>
@@ -14,7 +14,7 @@
         </template>
       </div>
 
-      <form class="relative ml-auto hidden w-64 flex-none md:block" @submit.prevent="handleSearch">
+      <form v-if="!hideSearch" class="relative ml-auto hidden w-64 flex-none md:block" @submit.prevent="handleSearch">
         <input
           v-model="searchQuery"
           type="text"
@@ -33,7 +33,7 @@
         </button>
       </form>
 
-      <div class="hidden items-center gap-2 md:flex">
+      <div class="hidden items-center gap-2 md:flex" :class="{ 'ml-auto': hideSearch }">
         <NuxtLink
           v-if="isLoggedIn"
           to="/mypage"
@@ -74,7 +74,7 @@
     </nav>
 
     <div v-if="mobileMenuOpen" class="sticky top-16 z-40 flex flex-col gap-1 border-b border-slate-200 bg-white px-4 py-4 md:hidden">
-      <form class="relative mb-2" @submit.prevent="handleSearch">
+      <form v-if="!hideSearch" class="relative mb-2" @submit.prevent="handleSearch">
         <input
           v-model="searchQuery"
           type="text"
@@ -93,7 +93,7 @@
         </button>
       </form>
 
-      <a href="#" class="px-1 py-2 text-sm text-slate-700" @click="closeMobileMenu">ランキング</a>
+      <a v-if="!hideRanking" href="#" class="px-1 py-2 text-sm text-slate-700" @click="closeMobileMenu">ランキング</a>
       <template v-if="isLoggedIn">
         <a href="#" class="px-1 py-2 text-sm text-blue-600" @click="closeMobileMenu">BotArena</a>
         <a href="#" class="px-1 py-2 text-sm text-slate-700" @click="closeMobileMenu">ボットを作成する</a>
@@ -131,7 +131,17 @@
 </template>
 
 <script setup lang="ts">
-const { isLoggedIn } = storeToRefs(useAuthStore())
+const props = withDefaults(
+  defineProps<{ forceGuest?: boolean; hideSearch?: boolean; hideRanking?: boolean }>(),
+  {
+    forceGuest: false,
+    hideSearch: false,
+    hideRanking: false,
+  },
+)
+
+const { isLoggedIn: isLoggedInState } = storeToRefs(useAuthStore())
+const isLoggedIn = computed(() => isLoggedInState.value && !props.forceGuest)
 
 useHead({
   link: [
