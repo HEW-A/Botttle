@@ -1,17 +1,6 @@
 <template>
   <div class="flex min-h-screen flex-col font-['M_PLUS_1_Code']">
-    <header class="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
-      <span class="text-2xl tracking-wide">botttle</span>
-      <nav class="flex flex-wrap items-center gap-3 md:gap-5">
-        <NuxtLink to="/main" class="text-sm whitespace-nowrap text-gray-600 hover:text-blue-600">
-          ゲストとして始める
-        </NuxtLink>
-        <div class="flex items-center gap-2">
-          <CommonAppButton to="/login?tab=register" variant="primary">新規登録</CommonAppButton>
-          <CommonAppButton to="/login" variant="outline">ログイン</CommonAppButton>
-        </div>
-      </nav>
-    </header>
+    <CommonAppHeader force-guest hide-search hide-ranking />
 
     <main class="flex-1">
       <section
