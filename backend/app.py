@@ -21,7 +21,9 @@ def create_app():
 
     # 開発中は指定URLのNuxtからのアクセスのみ許可
     # Cookieでセッションを扱うため、Cookie付きリクエストを許可する
-    CORS(app, origins=["http://localhost:3000"], supports_credentials=True)
+    # SameSite=LaxのCookieは"localhost"と"127.0.0.1"を別サイト扱いするため送信されない。
+    # frontendの接続先(NUXT_PUBLIC_API_BASE)と揃えて127.0.0.1に統一する
+    CORS(app, origins=["http://127.0.0.1:3000"], supports_credentials=True)
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(bot_creation_bp, url_prefix="/api/bots")
@@ -55,4 +57,4 @@ def create_app():
 
 if __name__ == "__main__":
     app = create_app()
-    app.run(debug=True, port=5000)
+    app.run(debug=True, host="127.0.0.1", port=5000)

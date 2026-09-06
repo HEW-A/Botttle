@@ -98,9 +98,9 @@ def test_signup_db_error_still_returns_cors_header(client):
     res = client.post(
         "/api/auth/signup",
         json={"user_id": "taro123", "username": "太郎", "password": "password123"},
-        headers={"Origin": "http://localhost:3000"},
+        headers={"Origin": "http://127.0.0.1:3000"},
     )
 
     assert res.status_code == 500
     assert res.get_json()["error"]
-    assert res.headers.get("Access-Control-Allow-Origin") == "http://localhost:3000"
+    assert res.headers.get("Access-Control-Allow-Origin") == "http://127.0.0.1:3000"
