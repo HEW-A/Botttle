@@ -9,7 +9,7 @@
         <a v-if="!hideRanking" href="#" class="text-sm whitespace-nowrap text-slate-700 hover:text-blue-600">ランキング</a>
         <template v-if="isLoggedIn">
           <a href="#" class="text-sm whitespace-nowrap text-slate-700 hover:text-blue-600">BotArena</a>
-          <a href="#" class="text-sm whitespace-nowrap text-slate-700 hover:text-blue-600">ボットを作成する</a>
+          <a href="/chatbot/creation" class="text-sm whitespace-nowrap text-slate-700 hover:text-blue-600">ボットを作成する</a>
           <a href="#" class="text-sm whitespace-nowrap text-slate-700 hover:text-blue-600">出品する</a>
         </template>
       </div>
