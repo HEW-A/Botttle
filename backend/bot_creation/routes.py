@@ -112,8 +112,8 @@ def create_bot_with_pdfs():
     description = request.form.get("description")
     category_id = request.form.get("category_id")
 
-    if not bot_name or not creator_id:
-        return jsonify({"error": "bot_name と creator_id は必須です"}), 400
+    if not bot_name:
+        return jsonify({"error": "bot_name は必須です"}), 400
 
     files = request.files.getlist("files")
     if not files:
