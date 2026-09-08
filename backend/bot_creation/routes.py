@@ -1,5 +1,6 @@
 import io
 import uuid
+import re
 
 from flask import Blueprint, request, jsonify
 try:
@@ -26,6 +27,15 @@ BOT_PDF_BUCKET = "bot_pdfs"
 DEFAULT_SALE_STATUS = "unlisted"
 
 
+def _sanitize_extracted_text(text: str) -> str:
+    # DB保存前に、PostgreSQLのtext型が扱えない制御文字を除去する。
+    # - NULバイト(\\x00): PostgreSQLのtext型は保存できず、insert失敗の原因になる
+    # - その他の制御文字(\\x01-\\x08, \\x0b, \\x0c, \\x0e-\\x1f): 表示・処理上問題を起こしうる
+    # - タブ(\\t)・改行(\\n)・復帰(\\r)は、通常のテキストとして扱いたいので除去しない
+    if not text:
+        return text
+    return re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", "", text)
+
 def _extract_text_from_pdf(file_bytes: bytes) -> str:
     """PDFのバイナリデータから、テキスト部分だけを抜き出す"""
     reader = PdfReader(io.BytesIO(file_bytes))
@@ -34,7 +44,7 @@ def _extract_text_from_pdf(file_bytes: bytes) -> str:
         page_text = page.extract_text()
         if page_text:
             text += page_text + "\n"
-    return text
+    return _sanitize_extracted_text(text)
 
 
 def _validate_pdf(file, file_bytes: bytes) -> str | None:

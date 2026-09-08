@@ -75,6 +75,48 @@ def test_rejects_broken_pdf():
     assert error == "PDFの読み込みに失敗しました(壊れている可能性があります)"
 
 
+def test_sanitize_removes_null_byte():
+    from bot_creation.routes import _sanitize_extracted_text
+
+    result = _sanitize_extracted_text("テキスト\x00不正な文字")
+    assert result == "テキスト不正な文字"
+    assert "\x00" not in result
+
+
+def test_sanitize_removes_other_control_characters():
+    from bot_creation.routes import _sanitize_extracted_text
+
+    result = _sanitize_extracted_text("あ\x01い\x1fう")
+    assert result == "あいう"
+
+
+def test_sanitize_keeps_tabs_and_newlines():
+    from bot_creation.routes import _sanitize_extracted_text
+
+    result = _sanitize_extracted_text("1行目\n2行目\tタブ入り")
+    assert result == "1行目\n2行目\tタブ入り"
+
+
+def test_sanitize_handles_empty_string():
+    from bot_creation.routes import _sanitize_extracted_text
+
+    assert _sanitize_extracted_text("") == ""
+    assert _sanitize_extracted_text(None) is None
+
+
+def test_extract_text_from_pdf_removes_null_bytes():
+    fake_page = MagicMock()
+    fake_page.extract_text.return_value = "テキスト\x00不正な文字を含む"
+
+    fake_reader = MagicMock()
+    fake_reader.pages = [fake_page]
+
+    with patch("bot_creation.routes.PdfReader", return_value=fake_reader):
+        result = _extract_text_from_pdf(b"dummy pdf bytes")
+
+    assert "\x00" not in result
+    assert result == "テキスト不正な文字を含む\n"
+
 # ============================================================
 # _extract_text_from_pdf のテスト
 # ============================================================
