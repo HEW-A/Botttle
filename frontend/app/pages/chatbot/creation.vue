@@ -1,11 +1,6 @@
 <template>
   <div class="flex min-h-screen flex-col bg-slate-50 font-['M_PLUS_1_Code']">
-    <header class="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
-      <span class="text-2xl tracking-wide">botttle</span>
-      <button type="button" class="text-sm whitespace-nowrap text-gray-600 hover:text-blue-600" @click="router.back()">
-        &larr; 戻る
-      </button>
-    </header>
+    <commonAppHeader/>
 
     <main class="flex-1">
       <div class="mx-auto flex w-full max-w-[640px] flex-col gap-9 px-6 py-14">
