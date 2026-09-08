@@ -4,6 +4,8 @@ from flask import Blueprint, request, jsonify
 
 from common.supabase_client import supabase
 
+from common.auth_helper import get_current_user
+
 auth_bp = Blueprint("auth", __name__)
 
 # 本番環境ではCookieにSecure属性を付ける（HTTPSでのみ送信）
@@ -142,22 +144,9 @@ def logout():
 # ログイン中のユーザー情報を返すapi（Cookieのaccess_tokenをSupabaseで検証）
 @auth_bp.route("/me", methods=["GET"])
 def me():
-    access_token = request.cookies.get(ACCESS_TOKEN_COOKIE)
-
-    if not access_token:
-        return jsonify({"error": "ログインしていません"}), 401
-
-    try:
-        result = supabase.auth.get_user(access_token)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 401
-
-    if not result or not result.user:
-        return jsonify({"error": "ログインしていません"}), 401
-
-    user_row = _find_user_row("supabase_uid", result.user.id)
+    user_row = get_current_user()
     if not user_row:
-        return jsonify({"error": "ユーザー情報が見つかりません"}), 404
+        return jsonify({"error": "ログインしていません"}), 401
 
     return jsonify({
         "user_id": user_row["user_id"],
