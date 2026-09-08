@@ -46,7 +46,7 @@ def test_create_bot_requires_bot_name(client):
         response = client.post("/api/bots", data=data, content_type="multipart/form-data")
 
     assert response.status_code == 400
-    assert response.get_json()["error"] == "bot_name と creator_id は必須です"
+    assert response.get_json()["error"] == "bot_name は必須です"
 
 
 def test_create_bot_requires_files(client):
