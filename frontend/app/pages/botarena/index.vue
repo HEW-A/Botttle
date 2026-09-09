@@ -1,9 +1,6 @@
 <template>
-  <div class="flex min-h-screen flex-col bg-slate-50 font-['M_PLUS_1_Code']">
-    <CommonAppHeader />
-
-    <main class="flex-1">
-      <div class="mx-auto max-w-5xl px-6 py-10 md:py-14">
+  <div class="font-['M_PLUS_1_Code']">
+    <div class="mx-auto max-w-5xl px-6 py-10 md:py-14">
         <!-- ============ ボット選択 ============ -->
         <template v-if="step === 'select'">
           <div class="mb-7">
@@ -207,18 +204,13 @@
           </div>
         </template>
       </div>
-    </main>
-
-    <CommonAppFooter />
-  </div>
+    </div>
 </template>
 
 <script setup>
 // BotArena: 匿名の2ボットに同じ質問を送って回答を比較し、投票後に正体を公開するバトル機能。
 // バックエンドAPIが未実装のため、本ページはダミーデータ・擬似応答によるフロントエンド単体のモックアップ。
-definePageMeta({
-  layout: false,
-})
+// ヘッダー/フッターは共通レイアウト(layouts/default.vue)側が描画するため、ここでは持たない。
 
 useHead({
   title: 'BotArena | botttle',
