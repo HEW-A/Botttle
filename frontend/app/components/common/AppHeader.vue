@@ -8,7 +8,7 @@
       <div v-if="!hideRanking || isLoggedIn" class="hidden items-center gap-4 md:flex">
         <a v-if="!hideRanking" href="#" class="text-sm whitespace-nowrap text-slate-700 hover:text-blue-600">ランキング</a>
         <template v-if="isLoggedIn">
-          <a href="#" class="text-sm whitespace-nowrap text-slate-700 hover:text-blue-600">BotArena</a>
+          <NuxtLink to="/botarena" class="text-sm whitespace-nowrap text-slate-700 hover:text-blue-600">BotArena</NuxtLink>
           <a href="/chatbot/creation" class="text-sm whitespace-nowrap text-slate-700 hover:text-blue-600">ボットを作成する</a>
           <a href="#" class="text-sm whitespace-nowrap text-slate-700 hover:text-blue-600">出品する</a>
         </template>
@@ -95,7 +95,7 @@
 
       <a v-if="!hideRanking" href="#" class="px-1 py-2 text-sm text-slate-700" @click="closeMobileMenu">ランキング</a>
       <template v-if="isLoggedIn">
-        <a href="#" class="px-1 py-2 text-sm text-blue-600" @click="closeMobileMenu">BotArena</a>
+        <NuxtLink to="/botarena" class="px-1 py-2 text-sm text-blue-600" @click="closeMobileMenu">BotArena</NuxtLink>
         <a href="#" class="px-1 py-2 text-sm text-slate-700" @click="closeMobileMenu">ボットを作成する</a>
         <a href="#" class="px-1 py-2 text-sm text-slate-700" @click="closeMobileMenu">出品する</a>
       </template>
