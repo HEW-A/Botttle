@@ -26,8 +26,8 @@ pip install -r requirements.txt
 
 # 起動
 python app.py
-# → http://localhost:5000/api/health が {"status": "ok"} を返せばOK
-# → http://localhost:5000/api/auth/health なども {"status": "ok", "domain": "auth"} を返す
+# → http://127.0.0.1:5000/api/health が {"status": "ok"} を返せばOK
+# → http://127.0.0.1:5000/api/auth/health なども {"status": "ok", "domain": "auth"} を返す
 
 # 作業終了時は仮想環境を抜ける
 deactivate
@@ -53,15 +53,17 @@ npm install
 
 # 起動
 npm run dev
-# → http://localhost:3000 にアクセスすると "Backend status: ok" が表示されればOK
+# → http://127.0.0.1:3000 にアクセスすると "Backend status: ok" が表示されればOK
 #   （backend が未起動の場合は "接続失敗" と表示される）
+#   ※ Cookie(SameSite=Lax)を使う認証の都合上、"localhost"ではなく"127.0.0.1"でアクセスすること
+#     （backendのCORS許可オリジンも127.0.0.1に合わせている）
 ```
 
-frontend は `runtimeConfig.public.apiBase`（デフォルト `http://localhost:5000`）を通じて backend の
+frontend は `runtimeConfig.public.apiBase`（デフォルト `http://127.0.0.1:5000`）を通じて backend の
 `GET /api/health` を呼び出します。接続先を変更したい場合は環境変数で上書きできます。
 
 ```bash
-NUXT_PUBLIC_API_BASE=http://localhost:8000 npm run dev
+NUXT_PUBLIC_API_BASE=http://127.0.0.1:8000 npm run dev
 ```
 
 ## テスト実行

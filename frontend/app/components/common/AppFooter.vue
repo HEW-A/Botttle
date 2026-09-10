@@ -1,0 +1,3 @@
+<template>
+  <footer class="border-t border-gray-200 px-6 py-6 text-center text-sm text-gray-400">© 2026 botttle</footer>
+</template>

@@ -3,10 +3,11 @@ import os
 from dotenv import load_dotenv
 from flask import Flask, jsonify
 from flask_cors import CORS
-from supabase import Client, create_client
+from werkzeug.exceptions import HTTPException
+from common.supabase_client import supabase
 
-from auth.test import auth_bp
-from bot_creation.test import bot_creation_bp
+from auth.routes import auth_bp
+from bot_creation.routes import bot_creation_bp
 from botarena.test import botarena_bp
 from users.test import users_bp
 from common.test import common_bp
@@ -19,24 +20,25 @@ def create_app():
     app = Flask(__name__)
 
     # 開発中は指定URLのNuxtからのアクセスのみ許可
-    CORS(app, origins=["http://localhost:3000"])
-
-    supabase_url = os.getenv("SUPABASE_URL")
-    supabase_key = os.getenv("SUPABASE_SECRET_KEY")
-
-    if not supabase_url or not supabase_key:
-        raise RuntimeError(
-            "SUPABASE_URL または SUPABASE_SECRET_KEY が .env に設定されていません"
-        )
-
-    # URLと秘密鍵を使い、以降のAPIで共通して使うSupabase接続を作成する
-    supabase: Client = create_client(supabase_url, supabase_key)
+    # Cookieでセッションを扱うため、Cookie付きリクエストを許可する
+    # SameSite=LaxのCookieは"localhost"と"127.0.0.1"を別サイト扱いするため送信されない。
+    # frontendの接続先(NUXT_PUBLIC_API_BASE)と揃えて127.0.0.1に統一する
+    CORS(app, origins=["http://127.0.0.1:3000"], supports_credentials=True)
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(bot_creation_bp, url_prefix="/api/bots")
     app.register_blueprint(botarena_bp, url_prefix="/api/botarena")
     app.register_blueprint(users_bp, url_prefix="/api/users")
     app.register_blueprint(common_bp, url_prefix="/api/common")
+
+    # 未処理の例外がdebugモードのインタラクティブデバッガー(CORSヘッダーが付かない)に
+    # 渡ってしまうのを防ぎ、常にCORSヘッダー付きのJSONエラーを返すようにする
+    @app.errorhandler(Exception)
+    def handle_unexpected_error(e):
+        if isinstance(e, HTTPException):
+            return e
+        app.logger.exception("Unexpected error")
+        return jsonify({"error": "サーバー内部でエラーが発生しました"}), 500
 
     @app.route("/api/health")
     def health():
@@ -55,4 +57,4 @@ def create_app():
 
 if __name__ == "__main__":
     app = create_app()
-    app.run(debug=True, port=5000)
+    app.run(debug=True, host="127.0.0.1", port=5000)

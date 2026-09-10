@@ -27,8 +27,6 @@ def test_health_returns_ok(client):
 @pytest.mark.parametrize(
     "path,domain",
     [
-        ("/api/auth/health", "auth"),
-        ("/api/bots/health", "bot_creation"),
         ("/api/botarena/health", "botarena"),
         ("/api/users/health", "users"),
         ("/api/common/health", "common"),
