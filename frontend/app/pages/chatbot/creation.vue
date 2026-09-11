@@ -1,6 +1,6 @@
 <template>
   <div class="flex min-h-screen flex-col bg-slate-50 font-['M_PLUS_1_Code']">
-    <commonAppHeader/>
+    <CommonAppHeader />
 
     <main class="flex-1">
       <div class="mx-auto flex w-full max-w-[640px] flex-col gap-9 px-6 py-14">
@@ -86,7 +86,7 @@
         </div>
         <div class="mt-1.5 flex w-full gap-2.5">
           <button type="button" class="flex-1 border-2 border-slate-700 bg-white py-3 text-sm font-bold text-slate-700">テストする</button>
-          <button type="button" class="flex-1 border-2 border-blue-600 bg-blue-600 py-3 text-sm font-bold text-white">出品する</button>
+          <button type="button" class="flex-1 border-2 border-blue-600 bg-blue-600 py-3 text-sm font-bold text-white" @click="goToListing">出品する</button>
         </div>
         <button type="button" class="mt-0.5 p-1 text-xs text-slate-400" @click="closeModal">閉じる</button>
       </div>
@@ -112,6 +112,8 @@ useHead({
 })
 
 const CREATE_DELAY_MS = 2200
+// バックエンド未連携のため、出品ページへの遷移確認用に固定のテストUUIDを使用する
+const TEST_CHATBOT_ID = '00000000-0000-0000-0000-000000000001'
 
 const fileInputRef = ref(null)
 const files = ref([])
@@ -168,5 +170,9 @@ function createBot() {
 function closeModal() {
   stage.value = 'setup'
   files.value = []
+}
+
+function goToListing() {
+  router.push(`/chatbot/${TEST_CHATBOT_ID}/listing`)
 }
 </script>
