@@ -47,11 +47,13 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   // Cookieのaccess_tokenからログイン状態を復元する(アプリ起動時などに呼ぶ想定)
+  // SSR中はブラウザのCookieが自動送信されないため、受信したリクエストのCookieヘッダーを明示的に転送する
   async function fetchMe() {
     try {
       user.value = await $fetch<AuthUser>('/api/auth/me', {
         baseURL: apiBase(),
         credentials: 'include',
+        headers: useRequestHeaders(['cookie']),
       })
     } catch {
       user.value = null
