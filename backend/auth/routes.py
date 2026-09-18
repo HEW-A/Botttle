@@ -127,6 +127,7 @@ def login():
         "message": "ログインに成功しました",
         "user_id": user_row["user_id"],
         "username": user_row["username"],
+        "email": user_row["user_mailaddless"],
     })
     _set_session_cookies(response, result.session)
 
