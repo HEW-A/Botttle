@@ -14,13 +14,17 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function login(userId: string, password: string) {
-    await $fetch('/api/auth/login', {
+    const result = await $fetch<AuthUser>('/api/auth/login', {
       baseURL: apiBase(),
       method: 'POST',
       credentials: 'include',
       body: { user_id: userId, password },
     })
-    await fetchMe()
+    user.value = {
+      user_id: result.user_id,
+      username: result.username,
+      email: result.email,
+    }
   }
 
   async function signup(userId: string, username: string, password: string, email?: string) {
