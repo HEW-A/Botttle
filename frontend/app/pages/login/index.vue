@@ -142,6 +142,7 @@
 <script setup>
 definePageMeta({
   layout: false,
+  middleware: 'guest',
 })
 
 useHead({
