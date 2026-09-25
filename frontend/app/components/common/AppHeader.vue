@@ -34,14 +34,15 @@
       </form>
 
       <div class="hidden items-center gap-2 md:flex" :class="{ 'ml-auto': hideSearch }">
-        <NuxtLink
+        <button
           v-if="isLoggedIn"
-          to="/mypage"
+          type="button"
           aria-label="アカウント"
           class="flex h-9 w-9 items-center justify-center rounded bg-slate-700 text-sm font-semibold text-white hover:bg-slate-800"
+          @click="accountModalOpen = true"
         >
           U
-        </NuxtLink>
+        </button>
         <template v-else>
           <NuxtLink to="/login" class="px-2 py-2 text-sm font-medium whitespace-nowrap text-blue-600 hover:text-blue-700">
             ログイン
@@ -102,14 +103,14 @@
 
       <div class="my-2 h-px bg-slate-200"></div>
 
-      <NuxtLink
+      <button
         v-if="isLoggedIn"
-        to="/mypage"
-        class="px-1 py-2 text-sm font-medium text-slate-700"
-        @click="closeMobileMenu"
+        type="button"
+        class="px-1 py-2 text-left text-sm font-medium text-slate-700"
+        @click="openAccountModal"
       >
         マイページ
-      </NuxtLink>
+      </button>
       <div v-else class="flex gap-2 p-1">
         <NuxtLink
           to="/login"
@@ -127,6 +128,42 @@
         </NuxtLink>
       </div>
     </div>
+
+    <div
+      v-if="accountModalOpen"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4"
+      @click.self="accountModalOpen = false"
+    >
+      <div class="flex w-full max-w-[320px] flex-col gap-5 border-2 border-slate-900 bg-white px-8 py-9">
+        <div class="flex flex-col items-center gap-2 text-center">
+          <div class="flex h-14 w-14 items-center justify-center rounded-full bg-slate-700 text-lg font-semibold text-white">
+            U
+          </div>
+          <p class="text-[15px] font-bold text-slate-900">{{ authUser?.username }}</p>
+        </div>
+
+        <NuxtLink
+          to="/mypage"
+          class="border-2 border-slate-700 py-2.5 text-center text-sm font-bold text-slate-700"
+          @click="accountModalOpen = false"
+        >
+          マイページ
+        </NuxtLink>
+
+        <button
+          type="button"
+          class="border-2 border-blue-600 bg-blue-600 py-2.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
+          :disabled="logoutLoading"
+          @click="handleLogout"
+        >
+          {{ logoutLoading ? 'ログアウト中...' : 'ログアウト' }}
+        </button>
+
+        <button type="button" class="p-1 text-xs text-slate-400" @click="accountModalOpen = false">
+          閉じる
+        </button>
+      </div>
+    </div>
   </header>
 </template>
 
@@ -140,8 +177,29 @@ const props = withDefaults(
   },
 )
 
-const { isLoggedIn: isLoggedInState } = storeToRefs(useAuthStore())
+const authStore = useAuthStore()
+const { isLoggedIn: isLoggedInState, user: authUser } = storeToRefs(authStore)
 const isLoggedIn = computed(() => isLoggedInState.value && !props.forceGuest)
+
+const router = useRouter()
+const accountModalOpen = ref(false)
+const logoutLoading = ref(false)
+
+function openAccountModal() {
+  closeMobileMenu()
+  accountModalOpen.value = true
+}
+
+async function handleLogout() {
+  logoutLoading.value = true
+  try {
+    await authStore.logout()
+  } finally {
+    logoutLoading.value = false
+    accountModalOpen.value = false
+    router.push('/')
+  }
+}
 
 useHead({
   link: [
