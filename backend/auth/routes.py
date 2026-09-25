@@ -1,3 +1,4 @@
+import logging
 import os
 
 from flask import Blueprint, request, jsonify
@@ -115,18 +116,33 @@ def login():
     if not user_row:
         return jsonify({"error": "ユーザーIDまたはパスワードが正しくありません"}), 401
 
+    # 既にログイン中の場合、共有のSupabaseクライアントで再度sign_inすると内部セッション状態が
+    # 衝突してエラーになるため、事前にCookieの既存セッションを確認して弾く
+    current_user = get_current_user()
+    if current_user:
+        if current_user["user_id"] == user_row["user_id"]:
+            return jsonify({
+                "message": "既にログインしています",
+                "user_id": current_user["user_id"],
+                "username": current_user["username"],
+                "email": current_user["user_mailaddless"],
+            })
+        return jsonify({"error": "既に別のアカウントでログインしています。ログアウトしてからお試しください"}), 409
+
     try:
         result = supabase.auth.sign_in_with_password({
             "email": user_row["auth_email"],
             "password": password,
         })
     except Exception:
+        logging.exception("ログイン処理でエラーが発生しました")
         return jsonify({"error": "ユーザーIDまたはパスワードが正しくありません"}), 401
 
     response = jsonify({
         "message": "ログインに成功しました",
         "user_id": user_row["user_id"],
         "username": user_row["username"],
+        "email": user_row["user_mailaddless"],
     })
     _set_session_cookies(response, result.session)
 
