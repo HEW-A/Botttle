@@ -2,18 +2,6 @@
   <div class="flex min-h-screen flex-col bg-slate-50 font-['M_PLUS_1_Code']">
     <CommonAppHeader />
 
-    <div class="border-b border-slate-200 bg-white">
-      <div class="mx-auto flex max-w-6xl flex-wrap items-center gap-1.5 px-6 py-3 text-xs text-slate-500">
-        <a href="#" class="text-slate-500 hover:text-blue-600">ホーム</a>
-        <span>/</span>
-        <a href="#" class="text-slate-500 hover:text-blue-600">チャットボット</a>
-        <span>/</span>
-        <a href="#" class="text-slate-500 hover:text-blue-600">{{ product.category }}</a>
-        <span>/</span>
-        <span class="text-slate-900">{{ product.name }}</span>
-      </div>
-    </div>
-
     <main class="flex-1">
       <div class="mx-auto max-w-6xl px-6 py-6">
         <div class="grid grid-cols-1 items-start gap-5 lg:grid-cols-[0.85fr_1.5fr_0.85fr]">
@@ -200,7 +188,6 @@ const productId = route.params.id
 // 商品取得APIが未実装のため、id をキーにしたモックデータで画面を成立させる(バックエンド連携時に置き換え予定)
 const mockProducts = {
   '00000000-0000-0000-0000-000000000001': {
-    category: 'カスタマーサポート系',
     name: '対応品質評価AI「サポたん」',
     rating: '4.8',
     reviewCount: 212,
@@ -228,7 +215,6 @@ const mockProducts = {
 }
 
 const fallbackProduct = {
-  category: 'チャットボット',
   name: `チャットボット #${productId}`,
   rating: '-',
   reviewCount: 0,
