@@ -11,6 +11,7 @@ from bot_creation.routes import bot_creation_bp
 from botarena.test import botarena_bp
 from users.test import users_bp
 from common.test import common_bp
+from home.routes import home_bp
 
 # backend/.env ファイルを読み込み、以降の os.getenv() で値を使えるようにする
 load_dotenv()
@@ -30,6 +31,7 @@ def create_app():
     app.register_blueprint(botarena_bp, url_prefix="/api/botarena")
     app.register_blueprint(users_bp, url_prefix="/api/users")
     app.register_blueprint(common_bp, url_prefix="/api/common")
+    app.register_blueprint(home_bp,url_prefix="/api/home")
 
     # 未処理の例外がdebugモードのインタラクティブデバッガー(CORSヘッダーが付かない)に
     # 渡ってしまうのを防ぎ、常にCORSヘッダー付きのJSONエラーを返すようにする
