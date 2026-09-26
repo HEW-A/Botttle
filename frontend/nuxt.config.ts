@@ -7,7 +7,8 @@ export default defineNuxtConfig({
   devServer: {
     host: '127.0.0.1',
   },
-  modules: ['@nuxtjs/tailwindcss', '@pinia/nuxt'],
+  modules: ['@nuxt/ui'],
+  css: ['~/assets/css/main.css', '@pinia/nuxt'],
   runtimeConfig: {
     public: {
       // 環境変数 NUXT_PUBLIC_API_BASE で上書き可能
