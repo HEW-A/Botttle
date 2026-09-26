@@ -32,7 +32,7 @@ def test_get_current_user_returns_user_row_when_valid():
             mock_supabase.auth.get_user.return_value = fake_auth_user
 
             # ② supabase.table("users").select(...) が、該当行を返す状況を再現
-            fake_user_row = {"id": "user-id-123", "user_id": "taro2026", "username": "たろう"}
+            fake_user_row = {"user_id": "taro2026", "username": "たろう"}
             mock_table_result = MagicMock()
             mock_table_result.data = [fake_user_row]
             mock_supabase.table.return_value.select.return_value.eq.return_value.limit.return_value.execute.return_value = mock_table_result

@@ -39,7 +39,7 @@ def test_create_bot_requires_login(client):
 # ============================================================
 
 def test_create_bot_requires_bot_name(client):
-    fake_user = {"id": "user-uuid-1"}
+    fake_user = {"user_id": "taro123"}
     data = {"files": _dummy_file()}
 
     with patch("bot_creation.routes.get_current_user", return_value=fake_user):
@@ -50,7 +50,7 @@ def test_create_bot_requires_bot_name(client):
 
 
 def test_create_bot_requires_files(client):
-    fake_user = {"id": "user-uuid-1"}
+    fake_user = {"user_id": "taro123"}
     data = {"bot_name": "テストボット"}
 
     with patch("bot_creation.routes.get_current_user", return_value=fake_user):
@@ -65,7 +65,7 @@ def test_create_bot_requires_files(client):
 # ============================================================
 
 def test_create_bot_returns_500_when_chatbot_insert_fails(client):
-    fake_user = {"id": "user-uuid-1"}
+    fake_user = {"user_id": "taro123"}
     data = {
         "bot_name": "テストボット",
         "files": _dummy_file(),
@@ -87,11 +87,11 @@ def test_create_bot_returns_500_when_chatbot_insert_fails(client):
 # ============================================================
 
 def test_create_bot_success(client):
-    fake_user = {"id": "user-uuid-1"}
+    fake_user = {"user_id": "taro123"}
     data = {
         "bot_name": "テストボット",
         "description": "説明文",
-        "category_id": "category-uuid-1",
+        "category_id": "1",
         "files": _dummy_file(),
     }
 
@@ -117,7 +117,7 @@ def test_create_bot_success(client):
 
 def test_create_bot_success_with_partial_pdf_failures(client):
     """PDFが一部失敗しても、chatbot作成自体は201で成功すること"""
-    fake_user = {"id": "user-uuid-1"}
+    fake_user = {"user_id": "taro123"}
     data = {
         "bot_name": "テストボット",
         "files": _dummy_file(),
