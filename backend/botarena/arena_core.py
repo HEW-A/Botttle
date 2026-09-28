@@ -14,11 +14,14 @@ import asyncio
 # 同じボットの組み合わせの再戦禁止期間
 COOLDOWN = timedelta(hours=1)
 
+async def local_bot(bot_name: str, question: str) -> str:
+    # 今は仮の処理。あとでローカルLLMへの接続に置き換える
+    return f"[{bot_name}のローカルBot] 「{question}」への回答"
 
 async def call_bot(bot_name: str, question: str) -> str:
     """本番では各ボットのAPIを叩く。今はダミーでオウム返し。"""
     await asyncio.sleep(0.05)
-    return f"[{bot_name}からのダミー回答] 「{question}」について考えてみました。"
+    return await local_bot(bot_name, question)
 
 
 class Arena:
