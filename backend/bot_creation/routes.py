@@ -24,7 +24,7 @@ MAX_PAGE_COUNT = 50
 MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
 
 BOT_PDF_BUCKET = "bot_pdfs"
-DEFAULT_SALE_STATUS = "unlisted"
+DEFAULT_IS_LISTED = False
 
 
 def _sanitize_extracted_text(text: str) -> str:
@@ -117,7 +117,7 @@ def create_bot_with_pdfs():
     if not current_user:
         return jsonify({"error": "ログインが必要です"}), 401
 
-    creator_id = current_user["id"]
+    creator_id = current_user["user_id"]
     bot_name = request.form.get("bot_name")
     description = request.form.get("description")
     category_id = request.form.get("category_id")
@@ -135,7 +135,7 @@ def create_bot_with_pdfs():
             "description": description,
             "category_id": category_id,
             "creator_id": creator_id,
-            "sale_status": DEFAULT_SALE_STATUS,
+            "is_listed": DEFAULT_IS_LISTED,
         }).execute()
     except Exception as e:
         return jsonify({"error": f"チャットボットの登録に失敗しました: {str(e)}"}), 500
