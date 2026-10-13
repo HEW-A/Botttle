@@ -138,13 +138,26 @@
                 </button>
               </div>
               <div class="mb-4.5 text-[28px] font-bold text-slate-900">¥{{ product.price.toLocaleString() }}</div>
-              <NuxtLink
-                :to="`/chatbot/${productId}/purchase`"
+              <button
+                type="button"
                 class="mb-2.5 block w-full rounded-lg bg-blue-600 py-3 text-center text-[15px] font-bold text-white hover:bg-blue-700"
+                @click="buyNow"
               >
                 今すぐ購入する
+              </button>
+              <NuxtLink
+                v-if="inCart"
+                to="/cart"
+                class="block w-full rounded-lg border border-blue-600 bg-white py-3 text-center text-sm font-bold text-blue-600 hover:bg-blue-50"
+              >
+                カートに追加済み（カートを見る）
               </NuxtLink>
-              <button type="button" class="w-full rounded-lg border border-slate-300 bg-white py-3 text-sm font-bold text-slate-700 hover:bg-slate-50">
+              <button
+                v-else
+                type="button"
+                class="w-full rounded-lg border border-slate-300 bg-white py-3 text-sm font-bold text-slate-700 hover:bg-slate-50"
+                @click="addToCart"
+              >
                 カートに入れる
               </button>
               <div class="mt-4.5 flex flex-col gap-2.5 border-t border-slate-100 pt-4.5 text-xs text-slate-600">
@@ -281,5 +294,24 @@ function sendTrialMessage() {
 
 function rechargePoints() {
   points.value += 300
+}
+
+// 購入は単品でも必ずカートを経由する
+const cartStore = useCartStore()
+const inCart = computed(() => cartStore.has(productId))
+
+function addToCart() {
+  cartStore.add({
+    id: productId,
+    name: product.name,
+    seller: product.seller.name,
+    price: product.price,
+    tags: [product.license],
+  })
+}
+
+function buyNow() {
+  addToCart()
+  navigateTo('/cart')
 }
 </script>
