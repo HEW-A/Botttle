@@ -71,15 +71,6 @@
             </span>
           </div>
         </div>
-        <div class="flex flex-col gap-1.5 px-6 pb-5">
-          <div class="flex h-1.5 overflow-hidden rounded-sm bg-slate-200">
-            <div class="bg-blue-600" :style="{ width: winRateBarWidth }"></div>
-          </div>
-          <div class="flex justify-between text-[11px] text-slate-500">
-            <span>WIN {{ profile.stats.wins }}</span>
-            <span>LOSE {{ profile.stats.losses }}</span>
-          </div>
-        </div>
       </section>
 
       <div v-if="profile.is_self" class="flex justify-center pt-2">
@@ -197,12 +188,6 @@ const winRateLabel = computed(() => {
   const { wins, losses } = profile.value.stats
   const total = wins + losses
   return total === 0 ? '-' : ((wins / total) * 100).toFixed(1)
-})
-
-const winRateBarWidth = computed(() => {
-  const { wins, losses } = profile.value.stats
-  const total = wins + losses
-  return total === 0 ? '0%' : `${(wins / total) * 100}%`
 })
 
 const editing = ref(false)
