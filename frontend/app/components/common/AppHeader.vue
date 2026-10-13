@@ -36,7 +36,7 @@
       <div class="hidden items-center gap-2 md:flex" :class="{ 'ml-auto': hideSearch }">
         <NuxtLink
           v-if="isLoggedIn"
-          to="/mypage"
+          :to="myProfilePath"
           aria-label="アカウント"
           class="flex h-9 w-9 items-center justify-center rounded bg-slate-700 text-sm font-semibold text-white hover:bg-slate-800"
         >
@@ -104,7 +104,7 @@
 
       <NuxtLink
         v-if="isLoggedIn"
-        to="/mypage"
+        :to="myProfilePath"
         class="px-1 py-2 text-sm font-medium text-slate-700"
         @click="closeMobileMenu"
       >
@@ -140,8 +140,9 @@ const props = withDefaults(
   },
 )
 
-const { isLoggedIn: isLoggedInState } = storeToRefs(useAuthStore())
+const { user, isLoggedIn: isLoggedInState } = storeToRefs(useAuthStore())
 const isLoggedIn = computed(() => isLoggedInState.value && !props.forceGuest)
+const myProfilePath = computed(() => (user.value ? `/users/${user.value.user_id}` : '/login'))
 
 useHead({
   link: [
