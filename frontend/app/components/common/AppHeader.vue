@@ -143,7 +143,7 @@
         </div>
 
         <NuxtLink
-          to="/mypage"
+          :to="myProfilePath"
           class="border-2 border-slate-700 py-2.5 text-center text-sm font-bold text-slate-700"
           @click="accountModalOpen = false"
         >
@@ -180,6 +180,7 @@ const props = withDefaults(
 const authStore = useAuthStore()
 const { isLoggedIn: isLoggedInState, user: authUser } = storeToRefs(authStore)
 const isLoggedIn = computed(() => isLoggedInState.value && !props.forceGuest)
+const myProfilePath = computed(() => (authUser.value ? `/users/${authUser.value.user_id}` : '/login'))
 
 const router = useRouter()
 const accountModalOpen = ref(false)
