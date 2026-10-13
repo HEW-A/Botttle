@@ -97,6 +97,7 @@
 <script setup>
 definePageMeta({
   layout: false,
+  middleware: 'auth',
 })
 
 const router = useRouter()
