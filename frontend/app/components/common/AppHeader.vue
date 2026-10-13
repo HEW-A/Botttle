@@ -34,15 +34,27 @@
       </form>
 
       <div class="hidden items-center gap-2 md:flex" :class="{ 'ml-auto': hideSearch }">
-        <button
-          v-if="isLoggedIn"
-          type="button"
-          aria-label="アカウント"
-          class="flex h-9 w-9 items-center justify-center rounded bg-slate-700 text-sm font-semibold text-white hover:bg-slate-800"
-          @click="accountModalOpen = true"
-        >
-          U
-        </button>
+        <template v-if="isLoggedIn">
+          <NuxtLink
+            to="/cart"
+            aria-label="カート"
+            class="flex h-9 w-9 items-center justify-center rounded text-slate-700 hover:bg-slate-100 hover:text-blue-600"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="9" cy="20" r="1"></circle>
+              <circle cx="18" cy="20" r="1"></circle>
+              <path d="M2 3h3l2.7 12.4a1 1 0 0 0 1 .8h9.6a1 1 0 0 0 1-.8L21 7H6"></path>
+            </svg>
+          </NuxtLink>
+          <button
+            type="button"
+            aria-label="アカウント"
+            class="flex h-9 w-9 items-center justify-center rounded bg-slate-700 text-sm font-semibold text-white hover:bg-slate-800"
+            @click="accountModalOpen = true"
+          >
+            U
+          </button>
+        </template>
         <template v-else>
           <NuxtLink to="/login" class="px-2 py-2 text-sm font-medium whitespace-nowrap text-blue-600 hover:text-blue-700">
             ログイン
@@ -103,14 +115,16 @@
 
       <div class="my-2 h-px bg-slate-200"></div>
 
-      <button
-        v-if="isLoggedIn"
-        type="button"
-        class="px-1 py-2 text-left text-sm font-medium text-slate-700"
-        @click="openAccountModal"
-      >
-        マイページ
-      </button>
+      <template v-if="isLoggedIn">
+        <NuxtLink to="/cart" class="px-1 py-2 text-sm font-medium text-slate-700" @click="closeMobileMenu">カート</NuxtLink>
+        <button
+          type="button"
+          class="px-1 py-2 text-left text-sm font-medium text-slate-700"
+          @click="openAccountModal"
+        >
+          マイページ
+        </button>
+      </template>
       <div v-else class="flex gap-2 p-1">
         <NuxtLink
           to="/login"
