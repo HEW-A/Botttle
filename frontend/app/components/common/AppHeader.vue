@@ -10,7 +10,7 @@
         <template v-if="isLoggedIn">
           <NuxtLink to="/botarena" class="text-sm whitespace-nowrap text-slate-700 hover:text-blue-600">BotArena</NuxtLink>
           <a href="/chatbot/creation" class="text-sm whitespace-nowrap text-slate-700 hover:text-blue-600">ボットを作成する</a>
-          <NuxtLink to="/mypage/created" class="text-sm whitespace-nowrap text-slate-700 hover:text-blue-600">出品する</NuxtLink>
+          <NuxtLink :to="myCreatedPath" class="text-sm whitespace-nowrap text-slate-700 hover:text-blue-600">出品する</NuxtLink>
         </template>
       </div>
 
@@ -47,7 +47,7 @@
             </svg>
           </NuxtLink>
           <NuxtLink
-            to="/mypage/favorite"
+            :to="myFavoritePath"
             aria-label="お気に入り"
             class="flex h-9 w-9 items-center justify-center rounded text-slate-700 hover:bg-slate-100 hover:text-blue-600"
           >
@@ -119,14 +119,14 @@
       <template v-if="isLoggedIn">
         <NuxtLink to="/botarena" class="px-1 py-2 text-sm text-blue-600" @click="closeMobileMenu">BotArena</NuxtLink>
         <a href="#" class="px-1 py-2 text-sm text-slate-700" @click="closeMobileMenu">ボットを作成する</a>
-        <NuxtLink to="/mypage/created" class="px-1 py-2 text-sm text-slate-700" @click="closeMobileMenu">出品する</NuxtLink>
+        <NuxtLink :to="myCreatedPath" class="px-1 py-2 text-sm text-slate-700" @click="closeMobileMenu">出品する</NuxtLink>
       </template>
 
       <div class="my-2 h-px bg-slate-200"></div>
 
       <template v-if="isLoggedIn">
         <NuxtLink to="/cart" class="px-1 py-2 text-sm font-medium text-slate-700" @click="closeMobileMenu">カート</NuxtLink>
-        <NuxtLink to="/mypage/favorite" class="px-1 py-2 text-sm font-medium text-slate-700" @click="closeMobileMenu">お気に入り</NuxtLink>
+        <NuxtLink :to="myFavoritePath" class="px-1 py-2 text-sm font-medium text-slate-700" @click="closeMobileMenu">お気に入り</NuxtLink>
         <button
           type="button"
           class="px-1 py-2 text-left text-sm font-medium text-slate-700"
@@ -205,6 +205,8 @@ const authStore = useAuthStore()
 const { isLoggedIn: isLoggedInState, user: authUser } = storeToRefs(authStore)
 const isLoggedIn = computed(() => isLoggedInState.value && !props.forceGuest)
 const myProfilePath = computed(() => (authUser.value ? `/users/${authUser.value.user_id}` : '/login'))
+const myCreatedPath = computed(() => (authUser.value ? `${myProfilePath.value}/created` : '/login'))
+const myFavoritePath = computed(() => (authUser.value ? `${myProfilePath.value}/favorite` : '/login'))
 
 const router = useRouter()
 const accountModalOpen = ref(false)

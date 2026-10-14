@@ -27,15 +27,15 @@
       </section>
 
       <section class="grid grid-cols-1 gap-4 sm:grid-cols-2" :class="{ 'lg:grid-cols-3': profile.is_self }">
-        <NuxtLink to="/mypage/created" class="flex flex-col gap-2 rounded-lg border border-slate-300 p-5 hover:bg-slate-50">
+        <NuxtLink :to="`/users/${profile.user_id}/created`" class="flex flex-col gap-2 rounded-lg border border-slate-300 p-5 hover:bg-slate-50">
           <span class="text-sm font-bold text-slate-900">作成品・出品中</span>
           <span class="text-xs text-slate-500">出品中 {{ profile.stats.listed_count }}件</span>
         </NuxtLink>
-        <NuxtLink to="/mypage/sales-history" class="flex flex-col gap-2 rounded-lg border border-slate-300 p-5 hover:bg-slate-50">
+        <NuxtLink :to="`/users/${profile.user_id}/sales-history`" class="flex flex-col gap-2 rounded-lg border border-slate-300 p-5 hover:bg-slate-50">
           <span class="text-sm font-bold text-slate-900">出品履歴</span>
           <span class="text-xs text-slate-500">販売済 {{ profile.stats.sold_count }}件</span>
         </NuxtLink>
-        <NuxtLink v-if="profile.is_self" to="/mypage/purchase-history" class="flex flex-col gap-2 rounded-lg border border-slate-300 p-5 hover:bg-slate-50">
+        <NuxtLink v-if="profile.is_self" :to="`/users/${profile.user_id}/purchase-history`" class="flex flex-col gap-2 rounded-lg border border-slate-300 p-5 hover:bg-slate-50">
           <span class="text-sm font-bold text-slate-900">購入履歴</span>
           <span class="text-xs text-slate-500">購入したボット {{ profile.purchase_count }}件</span>
         </NuxtLink>

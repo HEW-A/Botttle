@@ -150,7 +150,7 @@
           <NuxtLink to="/chat" class="mt-1.5 w-full border-2 border-blue-600 bg-blue-600 py-3 text-sm font-bold text-white">
             チャットボットを利用開始する
           </NuxtLink>
-          <NuxtLink to="/mypage/purchase-history" class="w-full py-2 text-center text-sm font-bold text-slate-700">
+          <NuxtLink :to="`/users/${authStore.user?.user_id}/purchase-history`" class="w-full py-2 text-center text-sm font-bold text-slate-700">
             購入履歴を見る
           </NuxtLink>
         </div>
@@ -169,6 +169,7 @@ definePageMeta({
 
 const router = useRouter()
 const cartStore = useCartStore()
+const authStore = useAuthStore()
 
 useHead({
   title: 'カート | botttle',
