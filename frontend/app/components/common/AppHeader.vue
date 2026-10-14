@@ -46,6 +46,15 @@
               <path d="M2 3h3l2.7 12.4a1 1 0 0 0 1 .8h9.6a1 1 0 0 0 1-.8L21 7H6"></path>
             </svg>
           </NuxtLink>
+          <NuxtLink
+            to="/mypage/favorite"
+            aria-label="お気に入り"
+            class="flex h-9 w-9 items-center justify-center rounded text-slate-700 hover:bg-slate-100 hover:text-blue-600"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9L12 3z"></path>
+            </svg>
+          </NuxtLink>
           <button
             type="button"
             aria-label="アカウント"
@@ -117,6 +126,7 @@
 
       <template v-if="isLoggedIn">
         <NuxtLink to="/cart" class="px-1 py-2 text-sm font-medium text-slate-700" @click="closeMobileMenu">カート</NuxtLink>
+        <NuxtLink to="/mypage/favorite" class="px-1 py-2 text-sm font-medium text-slate-700" @click="closeMobileMenu">お気に入り</NuxtLink>
         <button
           type="button"
           class="px-1 py-2 text-left text-sm font-medium text-slate-700"
