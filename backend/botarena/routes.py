@@ -1,9 +1,15 @@
 from flask import Blueprint, jsonify, request
+from common.auth_helper import get_current_user
 from .arena_core import Arena
 
 botarena_bp = Blueprint("botarena", __name__)
 
 arena = Arena()
+
+
+def _normalize(value):
+    # 文字列なら前後の空白を除く(空白だけが違う同一ボットのすり抜け防止)
+    return value.strip() if isinstance(value, str) else value
 
 
 @botarena_bp.route("/health")
@@ -18,14 +24,25 @@ def get_battles():
 
 @botarena_bp.route("/battles", methods=["POST"])
 async def create_battle():
-    data = request.get_json()
+    current_user = get_current_user()
+    if not current_user:
+        return jsonify({"error": "ログインが必要です"}), 401
+
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        data = {}
     question = data.get("question")
-    bot_a = data.get("bot_a")
-    bot_b = data.get("bot_b")
+    bot_a = _normalize(data.get("bot_a"))
+    bot_b = _normalize(data.get("bot_b"))
 
     if not question or not bot_a or not bot_b:
         return jsonify({
             "error": "question, bot_a, bot_b は必須です"
+        }), 400
+
+    if bot_a == bot_b:
+        return jsonify({
+            "error": "bot_a と bot_b は別のボットを指定してください"
         }), 400
 
     try:
@@ -52,13 +69,21 @@ def get_battle(battle_id):
 
 @botarena_bp.route("/battles/<battle_id>/vote", methods=["POST"])
 def vote(battle_id):
-    data = request.get_json()
-    user_id = data.get("user_id")
+    current_user = get_current_user()
+    if not current_user:
+        return jsonify({"error": "ログインが必要です"}), 401
+
+    # 投票者はログイン中のユーザー。リクエストの中身の user_id は使わない
+    user_id = current_user["user_id"]
+
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        data = {}
     choice = data.get("choice")
 
-    if not user_id or choice not in ("a", "b", "tie"):
+    if choice not in ("a", "b", "tie"):
         return jsonify({
-            "error": "user_id と choice は必須です"
+            "error": "choice は a, b, tie のいずれかを指定してください"
         }), 400
 
     try:

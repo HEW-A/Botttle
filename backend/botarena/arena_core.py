@@ -147,3 +147,4 @@ class Arena:
             {"battle_id": bid, "question": b["question"], "votes": b["votes"]}
             for bid, b in self.battles.items()
         ]
+    
