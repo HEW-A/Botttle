@@ -8,7 +8,7 @@ from common.supabase_client import supabase
 
 from auth.routes import auth_bp
 from bot_creation.routes import bot_creation_bp
-from botarena.test import botarena_bp
+from botarena.routes import botarena_bp
 from users.test import users_bp
 from common.test import common_bp
 
