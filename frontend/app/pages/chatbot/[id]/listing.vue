@@ -14,9 +14,14 @@
             <h2 class="text-xl font-bold text-slate-900">出品が完了しました</h2>
             <p class="text-sm text-slate-500">「{{ name }}」をマーケットに公開しました。</p>
           </div>
-          <button type="button" class="border-2 border-blue-600 bg-blue-600 px-7 py-3 text-sm font-bold text-white" @click="resetForm">
-            続けて出品する
-          </button>
+          <div class="flex flex-wrap justify-center gap-3">
+            <NuxtLink :to="`/chatbot/${chatbotId}`" class="border-2 border-blue-600 bg-blue-600 px-7 py-3 text-sm font-bold text-white">
+              出品したボットを確認
+            </NuxtLink>
+            <button type="button" class="border-2 border-slate-700 bg-white px-7 py-3 text-sm font-bold text-slate-700" @click="resetForm">
+              続けて出品する
+            </button>
+          </div>
         </div>
 
         <div v-else class="flex flex-col gap-9">
@@ -150,6 +155,7 @@
 <script setup>
 definePageMeta({
   layout: false,
+  middleware: 'auth',
 })
 
 useHead({
@@ -161,6 +167,9 @@ useHead({
     },
   ],
 })
+
+const route = useRoute()
+const chatbotId = computed(() => route.params.id)
 
 const categories = ['業務自動化', 'カスタマーサポート', 'マーケティング', '教育・学習', 'エンターテインメント', '開発・コーディング', 'その他']
 
