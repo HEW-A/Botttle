@@ -39,7 +39,12 @@
         </a>
       </div>
       <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <div v-for="listing in featuredListings" :key="listing.title" class="border border-gray-200">
+        <NuxtLink
+          v-for="listing in featuredListings"
+          :key="listing.title"
+          :to="`/chatbot/${listing.id}`"
+          class="block border border-gray-200 hover:border-blue-600"
+        >
           <div class="relative flex aspect-[4/3] items-center justify-center bg-gray-100 p-4 text-center text-xs text-gray-500">
             {{ listing.imageLabel }}
             <span
@@ -60,7 +65,7 @@
               </span>
             </div>
           </div>
-        </div>
+        </NuxtLink>
       </div>
     </section>
 
@@ -74,7 +79,12 @@
         </a>
       </div>
       <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <div v-for="listing in newListings" :key="listing.title" class="border border-gray-200">
+        <NuxtLink
+          v-for="listing in newListings"
+          :key="listing.title"
+          :to="`/chatbot/${listing.id}`"
+          class="block border border-gray-200 hover:border-blue-600"
+        >
           <div class="flex aspect-[4/3] items-center justify-center bg-gray-100 p-4 text-center text-xs text-gray-500">
             {{ listing.imageLabel }}
           </div>
@@ -83,7 +93,7 @@
             <h4 class="text-base font-semibold">{{ listing.title }}</h4>
             <span class="text-lg font-bold">{{ listing.price }}</span>
           </div>
-        </div>
+        </NuxtLink>
       </div>
     </section>
 
@@ -187,6 +197,7 @@ const tagClass = (variant) => {
 
 const featuredListings = [
   {
+    id: 1,
     tag: 'カスタマーサポート',
     tagVariant: 'accent',
     title: 'FAQ自動応答ボット「サポやん」',
@@ -197,6 +208,7 @@ const featuredListings = [
     sold: false,
   },
   {
+    id: 2,
     tag: '予約受付',
     tagVariant: 'accent-2',
     title: '美容室向け予約ボット「よやくん」',
@@ -207,6 +219,7 @@ const featuredListings = [
     sold: false,
   },
   {
+    id: 3,
     tag: '多言語対応',
     tagVariant: 'outline',
     title: '越境EC向け接客ボット「Global-chat」',
@@ -217,6 +230,7 @@ const featuredListings = [
     sold: false,
   },
   {
+    id: 4,
     tag: '学習支援',
     tagVariant: 'accent',
     title: '英会話練習ボット「Talky」',
@@ -230,6 +244,7 @@ const featuredListings = [
 
 const newListings = [
   {
+    id: 5,
     tag: 'マーケティング',
     tagVariant: 'accent-2',
     title: 'SNS運用アシスト「PostBuddy」',
@@ -237,6 +252,7 @@ const newListings = [
     price: '¥19,800',
   },
   {
+    id: 6,
     tag: 'エンタメ',
     tagVariant: 'accent',
     title: '雑談相手ボット「おしゃべりモモ」',
@@ -244,6 +260,7 @@ const newListings = [
     price: '¥3,500',
   },
   {
+    id: 7,
     tag: 'カスタマーサポート',
     tagVariant: 'outline',
     title: '返品対応自動化ボット「Returnie」',
@@ -251,6 +268,7 @@ const newListings = [
     price: '¥33,000',
   },
   {
+    id: 8,
     tag: '予約受付',
     tagVariant: 'accent-2',
     title: 'クリニック受付ボット「Carely」',
