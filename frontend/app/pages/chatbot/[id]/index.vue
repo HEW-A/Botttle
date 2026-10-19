@@ -138,15 +138,33 @@
                 </button>
               </div>
               <div class="mb-4.5 text-[28px] font-bold text-slate-900">¥{{ product.price.toLocaleString() }}</div>
-              <NuxtLink
-                :to="`/chatbot/${productId}/purchase`"
-                class="mb-2.5 block w-full rounded-lg bg-blue-600 py-3 text-center text-[15px] font-bold text-white hover:bg-blue-700"
+              <button
+                type="button"
+                class="mb-2.5 block w-full rounded-lg bg-blue-600 py-3 text-center text-[15px] font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:hover:bg-slate-300"
+                :disabled="!isLoggedIn"
+                @click="buyNow"
               >
                 今すぐ購入する
+              </button>
+              <NuxtLink
+                v-if="inCart && isLoggedIn"
+                to="/cart"
+                class="block w-full rounded-lg border border-blue-600 bg-white py-3 text-center text-sm font-bold text-blue-600 hover:bg-blue-50"
+              >
+                カートに追加済み（カートを見る）
               </NuxtLink>
-              <button type="button" class="w-full rounded-lg border border-slate-300 bg-white py-3 text-sm font-bold text-slate-700 hover:bg-slate-50">
+              <button
+                v-else
+                type="button"
+                class="w-full rounded-lg border border-slate-300 bg-white py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 disabled:hover:bg-slate-100"
+                :disabled="!isLoggedIn"
+                @click="addToCart"
+              >
                 カートに入れる
               </button>
+              <p v-if="!isLoggedIn" class="mt-2.5 text-center text-xs text-slate-500">
+                購入するには<NuxtLink to="/login" class="font-bold text-blue-600 hover:text-blue-700">ログイン</NuxtLink>が必要です
+              </p>
               <div class="mt-4.5 flex flex-col gap-2.5 border-t border-slate-100 pt-4.5 text-xs text-slate-600">
                 <div class="flex justify-between"><span>提供形式</span><span class="font-bold text-slate-900">{{ product.format }}</span></div>
                 <div class="flex justify-between"><span>ライセンス</span><span class="font-bold text-slate-900">{{ product.license }}</span></div>
@@ -281,5 +299,28 @@ function sendTrialMessage() {
 
 function rechargePoints() {
   points.value += 300
+}
+
+// 購入は単品でも必ずカートを経由する
+// 未ログイン時は購入・カート追加ボタンを無効化する(カート画面自体もauthミドルウェアで保護)
+const { isLoggedIn } = storeToRefs(useAuthStore())
+const cartStore = useCartStore()
+const inCart = computed(() => cartStore.has(productId))
+
+function addToCart() {
+  if (!isLoggedIn.value) return
+  cartStore.add({
+    id: productId,
+    name: product.name,
+    seller: product.seller.name,
+    price: product.price,
+    tags: [product.license],
+  })
+}
+
+function buyNow() {
+  if (!isLoggedIn.value) return
+  addToCart()
+  navigateTo('/cart')
 }
 </script>
