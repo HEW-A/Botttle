@@ -15,10 +15,10 @@
             class="flex cursor-pointer flex-col gap-3 rounded-[14px] border border-slate-200 bg-white p-7 text-left hover:border-blue-600"
             @click="goRandom"
           >
-            <span class="text-xs font-semibold text-blue-600">匿名の2つを戦わせる</span>
+            <span class="text-sm font-semibold text-blue-600">匿名の2つを戦わせる</span>
             <span class="text-[22px] font-bold text-slate-800">レート対戦</span>
             <span class="text-[13px] leading-relaxed text-slate-500">
-              出品中のボットから2体をランダムに選出。名前は投票後に公開されます。
+              出品中のボットから2体をランダムに選出。名前は投票後に公開されます。勝敗はランキングに影響します。
             </span>
             <span class="mt-2 self-start rounded-lg bg-blue-600 px-5 py-2.5 text-[13px] font-bold text-white">
               すぐに対戦する
@@ -29,10 +29,10 @@
             class="flex cursor-pointer flex-col gap-3 rounded-[14px] border border-slate-200 bg-white p-7 text-left hover:border-slate-700"
             @click="goPick"
           >
-            <span class="text-xs font-semibold text-slate-700">指名した2つを戦わせる</span>
+            <span class="text-sm font-semibold text-slate-700">指名した2つを戦わせる</span>
             <span class="text-[22px] font-bold text-slate-800">フリー対戦</span>
             <span class="text-[13px] leading-relaxed text-slate-500">
-              検索・お気に入り・カテゴリからAとBのボットを自分で指定して比較します。
+              検索・お気に入り・カテゴリからAとBのボットを自分で指定して比較します。この対戦はランキングに影響しません。
             </span>
             <span class="mt-2 self-start rounded-lg bg-slate-700 px-5 py-2.5 text-[13px] font-bold text-white">
               ボットを選ぶ
