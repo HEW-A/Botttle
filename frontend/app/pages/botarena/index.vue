@@ -15,8 +15,8 @@
             class="flex cursor-pointer flex-col gap-3 rounded-[14px] border border-slate-200 bg-white p-7 text-left hover:border-blue-600"
             @click="goRandom"
           >
-            <span class="text-xs font-semibold text-blue-600">匿名バトル</span>
-            <span class="text-[22px] font-bold text-slate-800">ランダム</span>
+            <span class="text-xs font-semibold text-blue-600">匿名の2つを戦わせる</span>
+            <span class="text-[22px] font-bold text-slate-800">レート対戦</span>
             <span class="text-[13px] leading-relaxed text-slate-500">
               出品中のボットから2体をランダムに選出。名前は投票後に公開されます。
             </span>
@@ -29,8 +29,8 @@
             class="flex cursor-pointer flex-col gap-3 rounded-[14px] border border-slate-200 bg-white p-7 text-left hover:border-slate-700"
             @click="goPick"
           >
-            <span class="text-xs font-semibold text-slate-700">指名バトル</span>
-            <span class="text-[22px] font-bold text-slate-800">選ぶ</span>
+            <span class="text-xs font-semibold text-slate-700">指名した2つを戦わせる</span>
+            <span class="text-[22px] font-bold text-slate-800">フリー対戦</span>
             <span class="text-[13px] leading-relaxed text-slate-500">
               検索・お気に入り・カテゴリからAとBのボットを自分で指定して比較します。
             </span>
@@ -159,7 +159,7 @@
             :class="canStart ? 'bg-blue-600 hover:bg-blue-700' : 'cursor-not-allowed bg-slate-400'"
             @click="startPicked"
           >
-            アリーナへ進む
+            BCを100払って対戦
           </button>
         </div>
       </template>
