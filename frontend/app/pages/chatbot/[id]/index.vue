@@ -52,13 +52,13 @@
                 </button>
               </div>
               <div v-else class="flex items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3.5">
-                <span class="text-[13px] text-red-800">ポイント残高が不足しています。ポイントをチャージするとお試しを続けられます。</span>
+                <span class="text-[13px] text-red-800">BC残高が不足しています。BCをチャージするとお試しを続けられます。</span>
                 <button
                   type="button"
                   class="flex-none rounded-md bg-slate-700 px-4 py-2 text-[12.5px] font-bold whitespace-nowrap text-white hover:bg-slate-800"
                   @click="rechargePoints"
                 >
-                  ポイントをチャージ
+                  BCをチャージ
                 </button>
               </div>
             </div>
