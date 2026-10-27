@@ -1,16 +1,6 @@
 <template>
   <div class="font-['M_PLUS_1_Code']">
     <div class="mx-auto max-w-[1080px] px-6 pt-10 pb-16">
-      <!-- ステップ表示 -->
-      <div class="mb-8 flex items-center justify-end gap-2 text-xs text-slate-400">
-        <template v-for="(label, i) in STEP_LABELS" :key="label">
-          <span v-if="i > 0">›</span>
-          <span class="font-semibold" :class="stepIndex === i + 1 ? 'text-blue-600' : 'text-slate-400'">
-            {{ i + 1 }} {{ label }}
-          </span>
-        </template>
-      </div>
-
       <!-- ============ モード選択 ============ -->
       <template v-if="step === 'mode'">
         <div class="mb-8 text-center">
@@ -325,8 +315,6 @@ useHead({
 // 対戦に必要なやり取り回数(これに達すると投票パネルが表示される)
 const REQUIRED_EXCHANGES = 2
 
-const STEP_LABELS = ['モード', 'ボット選択', 'アリーナ']
-
 const BOTS = [
   { id: 'b1', name: 'レシピ相談員 ポタージュ', owner: '@yuki_cook', category: '料理', avatar: 'ポ', winRate: 68, fav: true },
   { id: 'b2', name: '旅程プランナー オデッセイ', owner: '@tabi_taro', category: '旅行', avatar: 'オ', winRate: 74, fav: true },
@@ -379,8 +367,6 @@ const msgB = ref([])
 const exchanges = ref(0)
 const voted = ref(null) // null | 'A' | 'B' | 'tie' | 'bad'
 const sending = ref(false)
-
-const stepIndex = computed(() => ({ mode: 1, pick: 2, arena: 3 })[step.value])
 
 // ---- ボット選択 ----
 function filterBots(side, other) {
