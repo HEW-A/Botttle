@@ -1,0 +1,6 @@
+# Supabase CLI の設定ファイル
+# 項目を書いていない設定は CLI のデフォルト値が使われる
+# 詳細: https://supabase.com/docs/guides/local-development/cli/config
+
+# ローカル環境を区別するための名前（Supabase 本番のプロジェクトIDとは別物）
+project_id = "Botttle"
