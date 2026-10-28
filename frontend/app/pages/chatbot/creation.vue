@@ -85,7 +85,7 @@
           <p class="text-[13px] leading-relaxed text-slate-500">作成したチャットボットを出品するか、動作をテストできます。</p>
         </div>
         <div class="mt-1.5 flex w-full gap-2.5">
-          <button type="button" class="flex-1 border-2 border-slate-700 bg-white py-3 text-sm font-bold text-slate-700">テストする</button>
+          <button type="button" class="flex-1 border-2 border-slate-700 bg-white py-3 text-sm font-bold text-slate-700" @click="goToTest">テストする</button>
           <button type="button" class="flex-1 border-2 border-blue-600 bg-blue-600 py-3 text-sm font-bold text-white" @click="goToListing">出品する</button>
         </div>
         <button type="button" class="mt-0.5 p-1 text-xs text-slate-400" @click="closeModal">閉じる</button>
@@ -97,6 +97,7 @@
 <script setup>
 definePageMeta({
   layout: false,
+  middleware: 'auth',
 })
 
 const router = useRouter()
@@ -112,7 +113,7 @@ useHead({
 })
 
 const CREATE_DELAY_MS = 2200
-// バックエンド未連携のため、出品ページへの遷移確認用に固定のテストUUIDを使用する
+// バックエンド未連携のため、出品・テストページへの遷移確認用に固定のテストUUIDを使用する
 const TEST_CHATBOT_ID = '00000000-0000-0000-0000-000000000001'
 
 const fileInputRef = ref(null)
@@ -170,6 +171,10 @@ function createBot() {
 function closeModal() {
   stage.value = 'setup'
   files.value = []
+}
+
+function goToTest() {
+  router.push(`/chatbot/${TEST_CHATBOT_ID}/test`)
 }
 
 function goToListing() {

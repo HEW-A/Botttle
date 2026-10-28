@@ -4,44 +4,58 @@
 
     <div class="border-b border-slate-200 bg-white">
       <div class="mx-auto flex max-w-5xl items-center gap-2 px-6 py-3 text-[13px] text-slate-500">
-        <span>商品</span>
+        <span :class="{ 'font-bold text-blue-600': !confirmed }">カート・お支払い</span>
         <span class="opacity-50">→</span>
-        <span class="font-bold text-blue-600">お支払い</span>
-        <span class="opacity-50">→</span>
-        <span>完了</span>
+        <span :class="{ 'font-bold text-blue-600': confirmed }">完了</span>
       </div>
     </div>
 
     <main class="flex-1">
       <div v-if="!confirmed" class="mx-auto max-w-5xl px-6 py-9">
         <div class="mb-7 flex flex-col gap-1.5">
-          <h1 class="text-2xl font-bold text-slate-900">お支払い手続き</h1>
+          <h1 class="text-2xl font-bold text-slate-900">カート</h1>
           <p class="text-sm text-slate-500">ご注文内容をご確認のうえ、サイト内通貨（SC）でお支払いを確定してください。</p>
         </div>
 
-        <div class="grid grid-cols-1 items-start gap-6 lg:grid-cols-[1fr_380px]">
+        <div v-if="cartStore.count === 0" class="flex flex-col items-center gap-4 border-2 border-slate-900 bg-white p-10 text-center">
+          <p class="text-sm text-slate-700">カートに商品が入っていません。</p>
+          <NuxtLink to="/main" class="border-2 border-blue-600 bg-blue-600 px-6 py-2.5 text-sm font-bold text-white">
+            チャットボットを探す
+          </NuxtLink>
+        </div>
+
+        <div v-else class="grid grid-cols-1 items-start gap-6 lg:grid-cols-[1fr_380px]">
           <!-- left column -->
           <div class="flex flex-col gap-6">
             <section class="border-2 border-slate-900 bg-white p-6">
-              <h2 class="mb-3 text-lg font-bold text-slate-900">ご注文商品</h2>
-              <div class="flex items-center gap-4">
-                <div class="flex h-[76px] w-[76px] flex-none items-center justify-center border border-slate-200 bg-slate-50">
-                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="4" width="18" height="16" rx="2"></rect>
-                    <path d="M8 9h8"></path>
-                    <path d="M8 13h5"></path>
-                  </svg>
-                </div>
-                <div class="min-w-0 flex-1">
-                  <div class="text-[15px] font-bold text-slate-900">{{ item.name }}</div>
-                  <div class="my-1 text-xs text-slate-500">出品者: {{ item.seller }}</div>
-                  <div class="flex flex-wrap gap-1.5">
-                    <span v-for="tag in item.tags" :key="tag" class="bg-blue-100 px-2.5 py-1 text-[11px] font-bold text-blue-800">{{ tag }}</span>
+              <h2 class="mb-3 text-lg font-bold text-slate-900">ご注文商品（{{ cartStore.count }}点）</h2>
+              <div class="flex flex-col">
+                <div
+                  v-for="(item, index) in cartStore.items"
+                  :key="item.id"
+                  class="flex items-center gap-4 py-4"
+                  :class="{ 'border-t border-slate-200': index > 0 }"
+                >
+                  <div class="flex h-[76px] w-[76px] flex-none items-center justify-center border border-slate-200 bg-slate-50">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+                      <path d="M8 9h8"></path>
+                      <path d="M8 13h5"></path>
+                    </svg>
                   </div>
-                </div>
-                <div class="flex-none text-right">
-                  <div class="text-xs text-slate-500">数量: 1</div>
-                  <div class="mt-1 text-base font-bold text-slate-900">{{ formatNumber(item.price) }} SC</div>
+                  <div class="min-w-0 flex-1">
+                    <NuxtLink :to="`/chatbot/${item.id}`" class="text-[15px] font-bold text-slate-900 hover:text-blue-600">{{ item.name }}</NuxtLink>
+                    <div class="my-1 text-xs text-slate-500">出品者: {{ item.seller }}</div>
+                    <div class="flex flex-wrap gap-1.5">
+                      <span v-for="tag in item.tags" :key="tag" class="bg-blue-100 px-2.5 py-1 text-[11px] font-bold text-blue-800">{{ tag }}</span>
+                    </div>
+                  </div>
+                  <div class="flex flex-none flex-col items-end gap-1">
+                    <div class="text-base font-bold text-slate-900">{{ formatNumber(item.price) }} SC</div>
+                    <button type="button" class="text-xs font-bold text-slate-500 hover:text-red-600" @click="cartStore.remove(item.id)">
+                      削除
+                    </button>
+                  </div>
                 </div>
               </div>
             </section>
@@ -78,7 +92,7 @@
             <h2 class="text-lg font-bold text-slate-900">注文サマリー</h2>
 
             <div class="flex flex-col gap-2 text-sm">
-              <div class="flex items-baseline justify-between"><span class="text-slate-500">小計</span><span class="text-slate-900">{{ formatNumber(subtotal) }} SC</span></div>
+              <div class="flex items-baseline justify-between"><span class="text-slate-500">小計（{{ cartStore.count }}点）</span><span class="text-slate-900">{{ formatNumber(subtotal) }} SC</span></div>
               <div class="flex items-baseline justify-between"><span class="text-slate-500">プラットフォーム手数料（{{ feeRatePercent }}%）</span><span class="text-slate-900">{{ formatNumber(fee) }} SC</span></div>
             </div>
             <div class="h-px bg-slate-200"></div>
@@ -112,7 +126,7 @@
               {{ formatNumber(total) }} SCを支払って購入を確定する
             </button>
             <button type="button" class="w-full py-2 text-center text-sm font-bold text-slate-700" @click="router.back()">
-              商品ページに戻る
+              買い物を続ける
             </button>
 
             <p class="text-[11px] leading-relaxed text-slate-500">購入確定後、チャットボットの利用権はすぐに付与されます。SC（サイトコイン）はサイト内でのみご利用いただけます。</p>
@@ -128,14 +142,15 @@
             </svg>
           </div>
           <h2 class="text-xl font-bold text-slate-900">お支払いが完了しました</h2>
-          <p class="text-sm text-slate-500">注文番号 {{ orderNumber }}</p>
+          <p class="text-sm text-slate-500">注文番号 {{ order.number }}</p>
           <div class="h-px w-full bg-slate-200"></div>
-          <div class="flex w-full items-baseline justify-between text-sm"><span class="text-slate-500">お支払い金額</span><span class="font-bold text-slate-900">{{ formatNumber(total) }} SC</span></div>
-          <div class="flex w-full items-baseline justify-between text-sm"><span class="text-slate-500">残りの保有残高</span><span class="text-slate-900">{{ formatNumber(remaining) }} SC</span></div>
+          <div class="flex w-full items-baseline justify-between text-sm"><span class="text-slate-500">購入点数</span><span class="text-slate-900">{{ order.count }}点</span></div>
+          <div class="flex w-full items-baseline justify-between text-sm"><span class="text-slate-500">お支払い金額</span><span class="font-bold text-slate-900">{{ formatNumber(order.total) }} SC</span></div>
+          <div class="flex w-full items-baseline justify-between text-sm"><span class="text-slate-500">残りの保有残高</span><span class="text-slate-900">{{ formatNumber(balance) }} SC</span></div>
           <NuxtLink to="/chat" class="mt-1.5 w-full border-2 border-blue-600 bg-blue-600 py-3 text-sm font-bold text-white">
             チャットボットを利用開始する
           </NuxtLink>
-          <NuxtLink to="/mypage" class="w-full py-2 text-center text-sm font-bold text-slate-700">
+          <NuxtLink :to="`/users/${authStore.user?.user_id}/purchase-history`" class="w-full py-2 text-center text-sm font-bold text-slate-700">
             購入履歴を見る
           </NuxtLink>
         </div>
@@ -149,13 +164,15 @@
 <script setup>
 definePageMeta({
   layout: false,
+  middleware: 'auth',
 })
 
-const route = useRoute()
 const router = useRouter()
+const cartStore = useCartStore()
+const authStore = useAuthStore()
 
 useHead({
-  title: 'お支払い手続き | botttle',
+  title: 'カート | botttle',
   link: [
     {
       rel: 'stylesheet',
@@ -164,26 +181,20 @@ useHead({
   ],
 })
 
-// チャットボット出品APIが購入向けの商品取得を提供していないため、
-// id をキーにしたモックデータで画面を成立させる(バックエンド連携時に置き換え予定)
-const mockItems = {
-  1: { name: '接客対応AIチャットボット Pro', seller: 'botlab_yuki', price: 4800, tags: ['商用利用可', '即時ダウンロード'] },
-  2: { name: 'FAQ自動応答ボット ライトプラン', seller: 'helpdesk_taro', price: 1200, tags: ['個人利用'] },
-}
-const item = computed(() => mockItems[route.params.id] ?? { name: `チャットボット #${route.params.id}`, seller: '出品者未設定', price: 3000, tags: ['個人利用'] })
-
+// 残高取得・決済APIが未実装のため、モック値で画面を成立させる(バックエンド連携時に置き換え予定)
 const feeRatePercent = 5
 const balance = ref(8500)
 const agreed = ref(false)
 const confirmed = ref(false)
-const orderNumber = ref('')
+// 購入確定時にカートを空にするため、完了画面の表示内容は確定時点の値を保持しておく
+const order = ref({ number: '', count: 0, total: 0 })
 
-const subtotal = computed(() => item.value.price)
+const subtotal = computed(() => cartStore.subtotal)
 const fee = computed(() => Math.round(subtotal.value * feeRatePercent / 100))
 const total = computed(() => subtotal.value + fee.value)
 const remaining = computed(() => balance.value - total.value)
 const insufficient = computed(() => remaining.value < 0)
-const canConfirm = computed(() => agreed.value && !insufficient.value)
+const canConfirm = computed(() => cartStore.count > 0 && agreed.value && !insufficient.value)
 
 function formatNumber(value) {
   return value.toLocaleString()
@@ -191,7 +202,9 @@ function formatNumber(value) {
 
 function onConfirm() {
   if (!canConfirm.value) return
-  orderNumber.value = `CB-${Date.now()}`
+  order.value = { number: `CB-${Date.now()}`, count: cartStore.count, total: total.value }
+  balance.value = remaining.value
+  cartStore.clear()
   confirmed.value = true
 }
 </script>

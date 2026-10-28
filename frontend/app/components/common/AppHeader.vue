@@ -6,11 +6,11 @@
       </NuxtLink>
 
       <div v-if="!hideRanking || isLoggedIn" class="hidden items-center gap-4 md:flex">
-        <a v-if="!hideRanking" href="#" class="text-sm whitespace-nowrap text-slate-700 hover:text-blue-600">ランキング</a>
+        <NuxtLink v-if="!hideRanking" to="/ranking" class="text-sm whitespace-nowrap text-slate-700 hover:text-blue-600">ランキング</NuxtLink>
         <template v-if="isLoggedIn">
           <NuxtLink to="/botarena" class="text-sm whitespace-nowrap text-slate-700 hover:text-blue-600">BotArena</NuxtLink>
           <a href="/chatbot/creation" class="text-sm whitespace-nowrap text-slate-700 hover:text-blue-600">ボットを作成する</a>
-          <a href="#" class="text-sm whitespace-nowrap text-slate-700 hover:text-blue-600">出品する</a>
+          <NuxtLink :to="myCreatedPath" class="text-sm whitespace-nowrap text-slate-700 hover:text-blue-600">出品する</NuxtLink>
         </template>
       </div>
 
@@ -34,15 +34,36 @@
       </form>
 
       <div class="hidden items-center gap-2 md:flex" :class="{ 'ml-auto': hideSearch }">
-        <button
-          v-if="isLoggedIn"
-          type="button"
-          aria-label="アカウント"
-          class="flex h-9 w-9 items-center justify-center rounded bg-slate-700 text-sm font-semibold text-white hover:bg-slate-800"
-          @click="accountModalOpen = true"
-        >
-          U
-        </button>
+        <template v-if="isLoggedIn">
+          <NuxtLink
+            to="/cart"
+            aria-label="カート"
+            class="flex h-9 w-9 items-center justify-center rounded text-slate-700 hover:bg-slate-100 hover:text-blue-600"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="9" cy="20" r="1"></circle>
+              <circle cx="18" cy="20" r="1"></circle>
+              <path d="M2 3h3l2.7 12.4a1 1 0 0 0 1 .8h9.6a1 1 0 0 0 1-.8L21 7H6"></path>
+            </svg>
+          </NuxtLink>
+          <NuxtLink
+            :to="myFavoritePath"
+            aria-label="お気に入り"
+            class="flex h-9 w-9 items-center justify-center rounded text-slate-700 hover:bg-slate-100 hover:text-blue-600"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9L12 3z"></path>
+            </svg>
+          </NuxtLink>
+          <button
+            type="button"
+            aria-label="アカウント"
+            class="flex h-9 w-9 items-center justify-center rounded bg-slate-700 text-sm font-semibold text-white hover:bg-slate-800"
+            @click="accountModalOpen = true"
+          >
+            U
+          </button>
+        </template>
         <template v-else>
           <NuxtLink to="/login" class="px-2 py-2 text-sm font-medium whitespace-nowrap text-blue-600 hover:text-blue-700">
             ログイン
@@ -94,23 +115,26 @@
         </button>
       </form>
 
-      <a v-if="!hideRanking" href="#" class="px-1 py-2 text-sm text-slate-700" @click="closeMobileMenu">ランキング</a>
+      <NuxtLink v-if="!hideRanking" to="/ranking" class="px-1 py-2 text-sm text-slate-700" @click="closeMobileMenu">ランキング</NuxtLink>
       <template v-if="isLoggedIn">
         <NuxtLink to="/botarena" class="px-1 py-2 text-sm text-blue-600" @click="closeMobileMenu">BotArena</NuxtLink>
         <a href="#" class="px-1 py-2 text-sm text-slate-700" @click="closeMobileMenu">ボットを作成する</a>
-        <a href="#" class="px-1 py-2 text-sm text-slate-700" @click="closeMobileMenu">出品する</a>
+        <NuxtLink :to="myCreatedPath" class="px-1 py-2 text-sm text-slate-700" @click="closeMobileMenu">出品する</NuxtLink>
       </template>
 
       <div class="my-2 h-px bg-slate-200"></div>
 
-      <button
-        v-if="isLoggedIn"
-        type="button"
-        class="px-1 py-2 text-left text-sm font-medium text-slate-700"
-        @click="openAccountModal"
-      >
-        マイページ
-      </button>
+      <template v-if="isLoggedIn">
+        <NuxtLink to="/cart" class="px-1 py-2 text-sm font-medium text-slate-700" @click="closeMobileMenu">カート</NuxtLink>
+        <NuxtLink :to="myFavoritePath" class="px-1 py-2 text-sm font-medium text-slate-700" @click="closeMobileMenu">お気に入り</NuxtLink>
+        <button
+          type="button"
+          class="px-1 py-2 text-left text-sm font-medium text-slate-700"
+          @click="openAccountModal"
+        >
+          マイページ
+        </button>
+      </template>
       <div v-else class="flex gap-2 p-1">
         <NuxtLink
           to="/login"
@@ -143,7 +167,7 @@
         </div>
 
         <NuxtLink
-          to="/mypage"
+          :to="myProfilePath"
           class="border-2 border-slate-700 py-2.5 text-center text-sm font-bold text-slate-700"
           @click="accountModalOpen = false"
         >
@@ -180,6 +204,9 @@ const props = withDefaults(
 const authStore = useAuthStore()
 const { isLoggedIn: isLoggedInState, user: authUser } = storeToRefs(authStore)
 const isLoggedIn = computed(() => isLoggedInState.value && !props.forceGuest)
+const myProfilePath = computed(() => (authUser.value ? `/users/${authUser.value.user_id}` : '/login'))
+const myCreatedPath = computed(() => (authUser.value ? `${myProfilePath.value}/created` : '/login'))
+const myFavoritePath = computed(() => (authUser.value ? `${myProfilePath.value}/favorite` : '/login'))
 
 const router = useRouter()
 const accountModalOpen = ref(false)
