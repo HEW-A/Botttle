@@ -1,2 +1,7 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
+
+html {
+  /* ページごとのスクロールバー有無で中央寄せレイアウトが横にずれるのを防ぐ */
+  scrollbar-gutter: stable;
+}
