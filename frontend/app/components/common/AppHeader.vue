@@ -1,5 +1,5 @@
 <template>
-  <header class="sticky top-0 z-50 border-b border-slate-200 bg-white font-['M_PLUS_1_Code']">
+  <header class="sticky top-0 z-50 border-b border-slate-200 bg-white">
     <nav class="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 md:px-6">
       <NuxtLink to="/main" class="text-2xl tracking-wide">
         botttle
