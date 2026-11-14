@@ -10,6 +10,7 @@ from auth.routes import auth_bp
 from bot_creation.routes import bot_creation_bp
 from products.routes import products_bp
 from botarena.routes import botarena_bp
+from cart.routes import cart_bp
 from users.test import users_bp
 from common.test import common_bp
 
@@ -30,6 +31,7 @@ def create_app():
     app.register_blueprint(bot_creation_bp, url_prefix="/api/bots")
     app.register_blueprint(products_bp, url_prefix="/api/products")
     app.register_blueprint(botarena_bp, url_prefix="/api/botarena")
+    app.register_blueprint(cart_bp, url_prefix="/api/cart")
     app.register_blueprint(users_bp, url_prefix="/api/users")
     app.register_blueprint(common_bp, url_prefix="/api/common")
 
