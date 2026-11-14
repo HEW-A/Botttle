@@ -14,7 +14,7 @@
       <div v-if="!confirmed" class="mx-auto max-w-5xl px-6 py-9">
         <div class="mb-7 flex flex-col gap-1.5">
           <h1 class="text-2xl font-bold text-slate-900">カート</h1>
-          <p class="text-sm text-slate-500">ご注文内容をご確認のうえ、サイト内通貨（SC）でお支払いを確定してください。</p>
+          <p class="text-sm text-slate-500">ご注文内容をご確認のうえ、サイト内通貨（BC）でお支払いを確定してください。</p>
         </div>
 
         <div v-if="cartStore.count === 0" class="flex flex-col items-center gap-4 border-2 border-slate-900 bg-white p-10 text-center">
@@ -51,7 +51,7 @@
                     </div>
                   </div>
                   <div class="flex flex-none flex-col items-end gap-1">
-                    <div class="text-base font-bold text-slate-900">{{ formatNumber(item.price) }} SC</div>
+                    <div class="text-base font-bold text-slate-900">{{ formatNumber(item.price) }} BC</div>
                     <button type="button" class="text-xs font-bold text-slate-500 hover:text-red-600" @click="cartStore.remove(item.id)">
                       削除
                     </button>
@@ -66,9 +66,9 @@
               <label class="flex items-center justify-between gap-3 border-b border-slate-200 py-3 cursor-pointer">
                 <span class="flex items-center gap-2 text-sm text-slate-900">
                   <input type="radio" name="pay" checked class="h-4 w-4 accent-blue-600" />
-                  保有サイトコインで支払う
+                  保有BCで支払う
                 </span>
-                <span class="border border-blue-600 px-2.5 py-1 text-[11px] font-bold text-blue-600">残高 {{ formatNumber(balance) }} SC</span>
+                <span class="border border-blue-600 px-2.5 py-1 text-[11px] font-bold text-blue-600">残高 {{ formatNumber(balance) }} BC</span>
               </label>
               <label class="flex items-center justify-between gap-3 py-3 opacity-50 cursor-not-allowed">
                 <span class="flex items-center gap-2 text-sm text-slate-900">
@@ -92,18 +92,18 @@
             <h2 class="text-lg font-bold text-slate-900">注文サマリー</h2>
 
             <div class="flex flex-col gap-2 text-sm">
-              <div class="flex items-baseline justify-between"><span class="text-slate-500">小計（{{ cartStore.count }}点）</span><span class="text-slate-900">{{ formatNumber(subtotal) }} SC</span></div>
-              <div class="flex items-baseline justify-between"><span class="text-slate-500">プラットフォーム手数料（{{ feeRatePercent }}%）</span><span class="text-slate-900">{{ formatNumber(fee) }} SC</span></div>
+              <div class="flex items-baseline justify-between"><span class="text-slate-500">小計（{{ cartStore.count }}点）</span><span class="text-slate-900">{{ formatNumber(subtotal) }} BC</span></div>
+              <div class="flex items-baseline justify-between"><span class="text-slate-500">プラットフォーム手数料（{{ feeRatePercent }}%）</span><span class="text-slate-900">{{ formatNumber(fee) }} BC</span></div>
             </div>
             <div class="h-px bg-slate-200"></div>
-            <div class="flex items-baseline justify-between text-lg font-bold"><span class="text-slate-900">合計</span><span class="text-blue-600">{{ formatNumber(total) }} SC</span></div>
+            <div class="flex items-baseline justify-between text-lg font-bold"><span class="text-slate-900">合計</span><span class="text-blue-600">{{ formatNumber(total) }} BC</span></div>
 
             <div class="h-px bg-slate-200"></div>
             <div class="flex flex-col gap-2 text-sm">
-              <div class="flex items-baseline justify-between"><span class="text-slate-500">保有残高</span><span class="text-slate-900">{{ formatNumber(balance) }} SC</span></div>
+              <div class="flex items-baseline justify-between"><span class="text-slate-500">保有残高</span><span class="text-slate-900">{{ formatNumber(balance) }} BC</span></div>
               <div class="flex items-baseline justify-between">
                 <span class="text-slate-500">支払い後残高</span>
-                <span class="font-bold" :class="insufficient ? 'text-red-600' : 'text-slate-900'">{{ formatNumber(remaining) }} SC</span>
+                <span class="font-bold" :class="insufficient ? 'text-red-600' : 'text-slate-900'">{{ formatNumber(remaining) }} BC</span>
               </div>
             </div>
 
@@ -112,7 +112,7 @@
                 残高が不足しています。チャージしてから購入を確定してください。
               </div>
               <button type="button" class="w-full border-2 border-slate-700 bg-white py-3 text-sm font-bold text-slate-700">
-                サイトコインをチャージする
+                BCをチャージする
               </button>
             </template>
 
@@ -123,13 +123,13 @@
               :disabled="!canConfirm"
               @click="onConfirm"
             >
-              {{ formatNumber(total) }} SCを支払って購入を確定する
+              {{ formatNumber(total) }} BCを支払って購入を確定する
             </button>
             <button type="button" class="w-full py-2 text-center text-sm font-bold text-slate-700" @click="router.back()">
               買い物を続ける
             </button>
 
-            <p class="text-[11px] leading-relaxed text-slate-500">購入確定後、チャットボットの利用権はすぐに付与されます。SC（サイトコイン）はサイト内でのみご利用いただけます。</p>
+            <p class="text-[11px] leading-relaxed text-slate-500">購入確定後、チャットボットの利用権はすぐに付与されます。BCはサイト内でのみご利用いただけます。</p>
           </div>
         </div>
       </div>
@@ -145,8 +145,8 @@
           <p class="text-sm text-slate-500">注文番号 {{ order.number }}</p>
           <div class="h-px w-full bg-slate-200"></div>
           <div class="flex w-full items-baseline justify-between text-sm"><span class="text-slate-500">購入点数</span><span class="text-slate-900">{{ order.count }}点</span></div>
-          <div class="flex w-full items-baseline justify-between text-sm"><span class="text-slate-500">お支払い金額</span><span class="font-bold text-slate-900">{{ formatNumber(order.total) }} SC</span></div>
-          <div class="flex w-full items-baseline justify-between text-sm"><span class="text-slate-500">残りの保有残高</span><span class="text-slate-900">{{ formatNumber(balance) }} SC</span></div>
+          <div class="flex w-full items-baseline justify-between text-sm"><span class="text-slate-500">お支払い金額</span><span class="font-bold text-slate-900">{{ formatNumber(order.total) }} BC</span></div>
+          <div class="flex w-full items-baseline justify-between text-sm"><span class="text-slate-500">残りの保有残高</span><span class="text-slate-900">{{ formatNumber(balance) }} BC</span></div>
           <NuxtLink to="/chat" class="mt-1.5 w-full border-2 border-blue-600 bg-blue-600 py-3 text-sm font-bold text-white">
             チャットボットを利用開始する
           </NuxtLink>
