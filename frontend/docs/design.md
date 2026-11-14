@@ -47,13 +47,16 @@
 | プライマリボタン | `<UButton>`（既定） |
 | セカンダリボタン | `<UButton variant="outline">` |
 | テキストボタン | `<UButton variant="ghost">` |
-| 入力欄 | `UInput` / `UTextarea` |
+| 入力欄 | `UInput` / `UTextarea`（どちらも角丸 6px・文字 `text-sm`） |
 | カード・パネル | `UCard`（`variant="outline"` が既定。白地 + slate-200 の枠） |
 | ページの幅と余白 | `CommonPageContainer`（フォーム画面は `size="narrow"`） |
 | ページ見出し | `CommonPageHeader`（`title` / `description` / `#actions`） |
 | セクション見出し | `CommonSectionTitle` |
 | チャットの吹き出し | `CommonChatBubble`（`sender="user" \| "bot"`、`avatar` に 1 文字） |
 | 入力中の表示 | `CommonTypingIndicator` |
+
+ボタンは上の3種類（`primary` の solid / outline / ghost）を使います。無効時（`disabled`）のグレー表示はこの3種類にだけ設定しています。
+それ以外の色・variant（`color="error"` や `variant="soft"` など）は Nuxt UI 標準の「少し薄くなる」表示になるので、使う場合は無効時の見た目を確認してください。
 
 ## レイアウト
 
