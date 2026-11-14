@@ -8,6 +8,11 @@ export default defineNuxtConfig({
     host: '127.0.0.1',
   },
   modules: ['@nuxt/ui', '@pinia/nuxt'],
+  ui: {
+    // ダークモードには対応していないため、ブラウザ/OSの設定に関わらず常にライトモードで表示する
+    // (Nuxt UI 同梱の @nuxtjs/color-mode を無効化し、<html> に dark クラスが付与されないようにする)
+    colorMode: false,
+  },
   css: ['~/assets/css/main.css'],
   runtimeConfig: {
     public: {
