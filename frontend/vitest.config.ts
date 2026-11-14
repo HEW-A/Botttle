@@ -9,5 +9,7 @@ export default defineConfig({
   plugins: [vue()],
   test: {
     environment: 'happy-dom',
+    // テストファイルが無い状態でも npm test を失敗させない
+    passWithNoTests: true,
   },
 })
