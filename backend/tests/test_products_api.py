@@ -134,12 +134,34 @@ def test_list_products_returns_400_for_invalid_paging(client, query_string):
 # ============================================================
 
 
-@pytest.mark.parametrize("raw, expected", [("3", 3), ("1", 1), ("32767", 32767), ("03", 3)])
+@pytest.mark.parametrize(
+    "raw, expected",
+    [
+        ("3", 3),
+        ("1", 1),
+        ("32767", 32767),
+        ("03", 3),
+        # 先頭の半角スペース1個だけは無視する
+        ("%201", 1),
+        ("%2003", 3),
+    ],
+)
 def test_list_products_filters_by_category(client, raw, expected):
     response, query, _ = _get(client, f"/api/products?category_id={raw}", [_db_row()])
 
     assert query.eq.call_args_list == BASE_FILTERS + [call("category_id", expected)]
     assert response.status_code == 200
+
+
+@pytest.mark.parametrize("raw", ["", "%20", "%20%20%20"])
+def test_list_products_skips_category_filter_for_empty_value(client, raw):
+    # 空・半角スペースだけ(何個でも)は、q と同じく「指定なし」として扱う
+    response, query, db = _get(client, f"/api/products?category_id={raw}", [_db_row()])
+
+    db.table.assert_called_once_with("chatbot")
+    assert query.eq.call_args_list == BASE_FILTERS
+    assert response.status_code == 200
+    assert len(response.get_json()) == 1
 
 
 def test_list_products_returns_empty_for_unknown_category(client):
@@ -151,7 +173,21 @@ def test_list_products_returns_empty_for_unknown_category(client):
 
 @pytest.mark.parametrize(
     "raw",
-    ["abc", "1.5", "0", "-1", "32768", "99999", "%201%20", "+1", "", "１"],
+    [
+        "abc",
+        "1.5",
+        "0",
+        "-1",
+        "32768",
+        "99999",
+        "%2B1",  # 符号つき(URLの + は空白になるため %2B で送る)
+        "１",  # 全角数字
+        "1%20",  # 後ろに空白
+        "%201%20",  # 前後に空白
+        "%20%201",  # 先頭に空白が2個以上
+        "%E3%80%801",  # 先頭に全角スペース
+        "%E3%80%80",  # 全角スペースだけ
+    ],
 )
 def test_list_products_returns_400_for_invalid_category(client, raw):
     response, _, db = _get(client, f"/api/products?category_id={raw}")
@@ -228,6 +264,15 @@ def test_list_products_combines_category_search_and_paging(client):
     assert query.eq.call_args_list == BASE_FILTERS + [call("category_id", 2)]
     query.or_.assert_called_once_with(f"and({_search_value('英語')})")
     query.range.assert_called_once_with(5, 9)
+    assert response.status_code == 200
+
+
+def test_list_products_combines_empty_category_with_search(client):
+    # category_id が空でも、検索は通常どおり使える
+    response, query, _ = _get(client, "/api/products?category_id=&q=英語")
+
+    assert query.eq.call_args_list == BASE_FILTERS
+    query.or_.assert_called_once_with(f"and({_search_value('英語')})")
     assert response.status_code == 200
 
 

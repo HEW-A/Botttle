@@ -24,7 +24,7 @@ PAGING_ERROR = f"limit は1〜{MAX_LIMIT}、offset は0以上の整数で指定�
 CATEGORY_ID_MIN = 1
 CATEGORY_ID_MAX = 32767
 CATEGORY_ID_ERROR = f"category_id は{CATEGORY_ID_MIN}〜{CATEGORY_ID_MAX}の整数で指定してください"
-# 半角数字だけを許可する(前後の空白・符号・小数点は400にする)
+# 半角数字だけを許可する(後ろの空白・符号・小数点・全角は400にする)
 CATEGORY_ID_PATTERN = re.compile(r"[0-9]+")
 
 SEARCH_MAX_LENGTH = 60
@@ -56,11 +56,16 @@ def _parse_int(value, default):
 
 def _parse_category_id(value):
     """
-    未指定ならNone、正しい値ならint、不正な値なら False を返す。
+    指定なしならNone、正しい値ならint、不正な値なら False を返す。
+    - 未指定・空・半角スペースだけ(何個でも)は、指定なしとして扱う(q と同じ)
+    - 先頭の半角スペース1個だけは無視する(" 1" は 1)
+    - 先頭に2個以上、後ろに空白、全角スペースなどは不正(400)
     DBの smallint の範囲外をそのまま渡すとDB側で500になるため、ここで止める。
     """
-    if value is None:
+    if value is None or value.strip(" ") == "":
         return None
+    if value.startswith(" "):
+        value = value[1:]
     if not CATEGORY_ID_PATTERN.fullmatch(value):
         return False
     number = int(value)
