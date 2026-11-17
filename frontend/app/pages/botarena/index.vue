@@ -368,6 +368,25 @@ const exchanges = ref(0)
 const voted = ref(null) // null | 'A' | 'B' | 'tie' | 'bad'
 const sending = ref(false)
 
+// 擬似応答のタイマー。対戦を抜けた・再戦した・ページを離れたときに止め、
+// 前の対戦の回答が新しい対戦に混ざらないようにする
+const pendingTimers = []
+
+function schedule(fn, ms) {
+  const id = setTimeout(() => {
+    pendingTimers.splice(pendingTimers.indexOf(id), 1)
+    fn()
+  }, ms)
+  pendingTimers.push(id)
+}
+
+function clearPendingTimers() {
+  pendingTimers.forEach(clearTimeout)
+  pendingTimers.length = 0
+}
+
+onBeforeUnmount(clearPendingTimers)
+
 // ---- ボット選択 ----
 function filterBots(side, other) {
   const q = side.query.trim().toLowerCase()
@@ -406,6 +425,7 @@ function toggleCats(side) {
 
 // ---- 画面遷移 ----
 function enterArena(nextMode, a, b) {
+  clearPendingTimers()
   mode.value = nextMode
   botA.value = a
   botB.value = b
@@ -433,6 +453,8 @@ function goPick() {
 }
 
 function backToMode() {
+  clearPendingTimers()
+  sending.value = false
   step.value = 'mode'
 }
 
@@ -496,14 +518,14 @@ function sendPrompt() {
   input.value = ''
   sending.value = true
 
-  setTimeout(
+  schedule(
     () => {
       msgA.value.splice(-1, 1, { isText: true, text: pickResponse(a.category, seed) })
     },
     900 + Math.random() * 500,
   )
 
-  setTimeout(
+  schedule(
     () => {
       msgB.value.splice(-1, 1, { isText: true, text: pickResponse(b.category, seed + 1) })
       sending.value = false
