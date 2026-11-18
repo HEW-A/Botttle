@@ -73,7 +73,9 @@ def _upload_single_pdf(chatbot_id: str, file) -> dict:
     if error:
         raise ValueError(error)
 
-    unique_name = f"{uuid.uuid4()}_{file.filename}"
+    # Supabase Storageのオブジェクトキーには日本語などを含む元ファイル名を使わない。
+    # 利用者向けの元ファイル名は、下のfile_name列へそのまま保存する。
+    unique_name = f"{uuid.uuid4().hex}.pdf"
     file_path = f"{chatbot_id}/{unique_name}"
 
     supabase.storage.from_(BOT_PDF_BUCKET).upload(
