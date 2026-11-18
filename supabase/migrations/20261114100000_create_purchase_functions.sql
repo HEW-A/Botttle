@@ -98,6 +98,18 @@ begin
     end if;
   end if;
 
+  -- 購入する商品の行を共有ロック(FOR SHARE)する。
+  -- 確認してから購入記録を追加し終えるまでの間に、出品者が価格の変更や出品停止をしても
+  -- このトランザクションの終了まで待たされるので、確認した内容と違う価格・状態で購入されない。
+  -- 共有ロックなので、他の購入者が同じ商品を同時に購入するのは妨げない。
+  -- ロックの取得順を揃えてデッドロックを防ぐため、chatbot_id 順にロックする。
+  -- (出品者の users 行はロックしない。購入者として自分の行を FOR UPDATE している別の
+  --  トランザクションと、互いの行を待ち合うデッドロックになりうるため)
+  perform 1 from chatbot
+  where chatbot_id = any(v_ids)
+  order by chatbot_id
+  for share;
+
   -- 購入できる商品か1件ずつ確認する(1件でも購入できなければ全体を購入しない)
   for v_item in
     select requested_id, b.chatbot_id, b.creator_id, b.price
