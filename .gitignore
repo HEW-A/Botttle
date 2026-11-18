@@ -45,3 +45,8 @@ Thumbs.db
 
 # --- Claude Code ---
 .claude/
+
+
+
+#vscode
+.code-workspace
