@@ -14,10 +14,12 @@
 -- エスケープは不要。
 --
 -- 出品中で、出品者が退会していない商品だけを返す(商品一覧APIと同じ条件)。
+-- p_category_id を渡すとそのカテゴリだけに絞る(null なら全カテゴリ)。
 
 create or replace function search_products(
   p_query text,
   p_terms text[],
+  p_category_id smallint,
   p_limit integer,
   p_offset integer
 )
@@ -27,6 +29,7 @@ returns table (
   price integer,
   description text,
   thumbnail_url text,
+  category_id smallint,
   username varchar,
   category_name text
 )
@@ -40,6 +43,7 @@ as $$
     c.price,
     c.description,
     c.thumbnail_url,
+    c.category_id,
     u.username,
     cat.category_name
   from chatbot c
@@ -59,6 +63,7 @@ as $$
   where c.is_listed
     and not u.is_withdrawn
     and s.matched > 0
+    and (p_category_id is null or c.category_id = p_category_id)
   order by
     (lower(c.bot_name) = lower(p_query)) desc,
     s.name_hits desc,

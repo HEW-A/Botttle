@@ -1,7 +1,31 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
 
+/*
+ * デザイントークン（ルールの詳細は frontend/docs/design.md）
+ * 角丸は「原則なし」。例外は次の2つだけ、トークンで指定する。
+ *   rounded-control … ボタン・入力欄（6px）
+ *   rounded-bubble  … チャットの吹き出し（22px。1行ならピル型に見える）
+ * アバターやドットなど円形のものは rounded-full を使う。
+ */
+@theme {
+  --font-sans: 'M PLUS 1 Code', ui-monospace, monospace;
+  --radius-control: 6px;
+  --radius-bubble: 22px;
+}
+
+:root {
+  /* Nuxt UI の角丸の基準値。0 にすると Nuxt UI の部品と rounded-sm〜3xl がすべて角なしになる */
+  --ui-radius: 0;
+  /* Nuxt UI の primary は標準で 500 番を使うため、既存画面の blue-600 に揃える */
+  --ui-primary: var(--ui-color-primary-600);
+}
+
 html {
   /* ページごとのスクロールバー有無で中央寄せレイアウトが横にずれるのを防ぐ */
   scrollbar-gutter: stable;
+}
+
+body {
+  background-color: var(--ui-color-neutral-50);
 }
