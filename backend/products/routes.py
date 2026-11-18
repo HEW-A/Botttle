@@ -27,8 +27,6 @@ CATEGORY_ID_ERROR = f"category_id は{CATEGORY_ID_MIN}〜{CATEGORY_ID_MAX}の整
 # 半角数字だけを許可する(後ろの空白・符号・小数点・全角は400にする)
 CATEGORY_ID_PATTERN = re.compile(r"[0-9]+")
 
-SEARCH_MAX_LENGTH = 60
-
 
 def _to_product(row):
     """DBの1行を、APIで返す8項目の辞書に変換する"""
@@ -57,7 +55,7 @@ def _parse_int(value, default):
 def _parse_category_id(value):
     """
     指定なしならNone、正しい値ならint、不正な値なら False を返す。
-    - 未指定・空・半角スペースだけ(何個でも)は、指定なしとして扱う(q と同じ)
+    - 未指定・空・半角スペースだけ(何個でも)は、指定なしとして扱う
     - 先頭の半角スペース1個だけは無視する(" 1" は 1)
     - 先頭に2個以上、後ろに空白、全角スペースなどは不正(400)
     DBの smallint の範囲外をそのまま渡すとDB側で500になるため、ここで止める。
@@ -72,44 +70,6 @@ def _parse_category_id(value):
     if not (CATEGORY_ID_MIN <= number <= CATEGORY_ID_MAX):
         return False
     return number
-
-
-def _search_words(value):
-    """
-    検索キーワードを単語のリストにする。検索しない場合は空リストを返す。
-    - * はPostgRESTで「何でも一致」に変換されるため取り除いて前後をつなげる
-    - 前後の半角スペースを消してから60文字で切る
-    - 半角スペースだけを区切りにする(全角スペースはただの文字)
-    """
-    if value is None:
-        return []
-    keyword = value.replace("*", "").strip(" ")[:SEARCH_MAX_LENGTH]
-    return [word for word in keyword.split(" ") if word]
-
-
-def _like_value(word):
-    """
-    単語を、部分一致検索用のPostgRESTの値にする。
-    1. LIKEで特別な意味を持つ \\ % _ をエスケープして、ただの文字にする
-    2. 前後に * を付けて部分一致にする(PostgRESTが % に変換する)
-    3. , ( ) などを含んでも壊れないよう、ダブルクォートで囲む
-    """
-    escaped = word.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
-    pattern = f"*{escaped}*"
-    quoted = pattern.replace("\\", "\\\\").replace('"', '\\"')
-    return f'"{quoted}"'
-
-
-def _search_filter(words):
-    """
-    全単語を含む(AND)、各単語はBot名か説明文のどちらかに含む(OR)条件を作る。
-    or_ に1条件だけ渡すことで、1つのクエリパラメータにまとめている。
-    """
-    conditions = ",".join(
-        f"or(bot_name.ilike.{_like_value(w)},description.ilike.{_like_value(w)})"
-        for w in words
-    )
-    return f"and({conditions})"
 
 
 def _listed_products_query():
@@ -134,14 +94,10 @@ def list_products():
     if category_id is False:
         return jsonify({"error": CATEGORY_ID_ERROR}), 400
 
-    words = _search_words(request.args.get("q"))
-
     query = _listed_products_query()
     if category_id is not None:
         # 存在しないIDの場合は、該当なしとして [] が返る
         query = query.eq("category_id", category_id)
-    if words:
-        query = query.or_(_search_filter(words))
 
     response = (
         query.order("create_at", desc=True)

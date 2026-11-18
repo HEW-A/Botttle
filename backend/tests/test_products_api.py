@@ -63,11 +63,6 @@ def _get(client, url, rows=()):
     return response, query, db
 
 
-def _search_value(word):
-    """1単語の検索条件(テストの期待値)"""
-    return f'or(bot_name.ilike."*{word}*",description.ilike."*{word}*")'
-
-
 # ============================================================
 # 一覧
 # ============================================================
@@ -155,7 +150,7 @@ def test_list_products_filters_by_category(client, raw, expected):
 
 @pytest.mark.parametrize("raw", ["", "%20", "%20%20%20"])
 def test_list_products_skips_category_filter_for_empty_value(client, raw):
-    # 空・半角スペースだけ(何個でも)は、q と同じく「指定なし」として扱う
+    # 空・半角スペースだけ(何個でも)は「指定なし」として扱う
     response, query, db = _get(client, f"/api/products?category_id={raw}", [_db_row()])
 
     db.table.assert_called_once_with("chatbot")
@@ -197,82 +192,11 @@ def test_list_products_returns_400_for_invalid_category(client, raw):
     assert response.get_json()["error"] == CATEGORY_ID_ERROR
 
 
-# ============================================================
-# 一覧: 検索
-# ============================================================
-
-
-def test_list_products_searches_single_word(client):
-    response, query, _ = _get(client, "/api/products?q=英語", [_db_row()])
-
-    query.or_.assert_called_once_with(f"and({_search_value('英語')})")
-    assert response.status_code == 200
-
-
-def test_list_products_searches_all_words(client):
-    # 連続する半角スペースも1つの区切りとして扱う
-    _, query, _ = _get(client, "/api/products?q=英語%20%20%20練習")
-
-    query.or_.assert_called_once_with(
-        f"and({_search_value('英語')},{_search_value('練習')})"
-    )
-
-
-def test_list_products_does_not_split_on_fullwidth_space(client):
-    _, query, _ = _get(client, "/api/products?q=英語　練習")
-
-    query.or_.assert_called_once_with(f"and({_search_value('英語　練習')})")
-
-
-def test_list_products_escapes_special_characters(client):
-    # % _ \ はLIKE用にエスケープし、さらに \ と " はPostgREST用にエスケープする
-    _, query, _ = _get(client, "/api/products?q=" + "100%25_a,(b)%22c%5Cd%26e")
-
-    expected = '100\\\\%\\\\_a,(b)\\"c\\\\\\\\d&e'
-    query.or_.assert_called_once_with(f"and({_search_value(expected)})")
-
-
-def test_list_products_removes_asterisk_and_joins(client):
-    _, query, _ = _get(client, "/api/products?q=a*b")
-
-    query.or_.assert_called_once_with(f"and({_search_value('ab')})")
-
-
-@pytest.mark.parametrize("raw", ["", "%20%20%20", "***", "*%20*"])
-def test_list_products_skips_search_for_empty_keyword(client, raw):
-    response, query, _ = _get(client, f"/api/products?q={raw}")
-
-    query.or_.assert_not_called()
-    assert response.status_code == 200
-
-
-def test_list_products_cuts_keyword_to_60_characters(client):
-    _, query, _ = _get(client, "/api/products?q=" + "あ" * 70)
-
-    query.or_.assert_called_once_with(f"and({_search_value('あ' * 60)})")
-
-
-def test_list_products_strips_spaces_before_cutting(client):
-    _, query, _ = _get(client, "/api/products?q=%20%20" + "あ" * 60 + "い")
-
-    query.or_.assert_called_once_with(f"and({_search_value('あ' * 60)})")
-
-
-def test_list_products_combines_category_search_and_paging(client):
-    response, query, _ = _get(client, "/api/products?category_id=2&q=英語&limit=5&offset=5")
+def test_list_products_combines_category_and_paging(client):
+    response, query, _ = _get(client, "/api/products?category_id=2&limit=5&offset=5")
 
     assert query.eq.call_args_list == BASE_FILTERS + [call("category_id", 2)]
-    query.or_.assert_called_once_with(f"and({_search_value('英語')})")
     query.range.assert_called_once_with(5, 9)
-    assert response.status_code == 200
-
-
-def test_list_products_combines_empty_category_with_search(client):
-    # category_id が空でも、検索は通常どおり使える
-    response, query, _ = _get(client, "/api/products?category_id=&q=英語")
-
-    assert query.eq.call_args_list == BASE_FILTERS
-    query.or_.assert_called_once_with(f"and({_search_value('英語')})")
     assert response.status_code == 200
 
 
