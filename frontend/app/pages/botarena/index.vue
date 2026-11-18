@@ -16,7 +16,7 @@
             @click="goRandom"
           >
             <span class="text-sm font-semibold text-blue-600">匿名の2つを戦わせる</span>
-            <span class="text-[22px] font-bold text-slate-800">レート対戦</span>
+            <span class="text-[22px] font-bold text-slate-800">{{ MODE_LABELS.random }}</span>
             <span class="text-[13px] leading-relaxed text-slate-500">
               出品中のボットから2体をランダムに選出。名前は投票後に公開されます。勝敗はランキングに影響します。
             </span>
@@ -30,7 +30,7 @@
             @click="goPick"
           >
             <span class="text-sm font-semibold text-slate-700">指名した2つを戦わせる</span>
-            <span class="text-[22px] font-bold text-slate-800">フリー対戦</span>
+            <span class="text-[22px] font-bold text-slate-800">{{ MODE_LABELS.pick }}</span>
             <span class="text-[13px] leading-relaxed text-slate-500">
               検索・お気に入り・カテゴリからAとBのボットを自分で指定して比較します。この対戦はランキングに影響しません。
             </span>
@@ -169,7 +169,7 @@
         <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
           <div>
             <h1 class="mb-1 text-xl font-bold text-slate-800">
-              {{ mode === 'random' ? 'アリーナ ・ ランダム対戦' : 'アリーナ ・ 指名対戦' }}
+              アリーナ ・ {{ MODE_LABELS[mode] }}
             </h1>
             <p class="text-[13px] text-slate-500">
               {{
@@ -298,7 +298,7 @@
 
 <script setup>
 // BotArena: 2体のボットに同じ質問を送って回答を比較し、投票するバトル機能。
-// 対戦方法は「ランダム(匿名)」と「選ぶ(指名)」の二択。ランダムは投票後に正体を公開する。
+// 対戦方法は「レート対戦(ランダム・匿名)」と「フリー対戦(指名)」の二択。レート対戦は投票後に正体を公開する。
 // バックエンドAPIが未実装のため、本ページはダミーデータ・擬似応答によるフロントエンド単体のモックアップ。
 // ヘッダー/フッターは共通レイアウト(layouts/default.vue)側が描画するため、ここでは持たない。
 
@@ -311,6 +311,9 @@ useHead({
     },
   ],
 })
+
+// 対戦モードの表示名。モード選択カードとアリーナ見出しで共通して使う
+const MODE_LABELS = { random: 'レート対戦', pick: 'フリー対戦' }
 
 // 対戦に必要なやり取り回数(これに達すると投票パネルが表示される)
 const REQUIRED_EXCHANGES = 2
@@ -469,7 +472,7 @@ function rematch() {
 
 // ---- アリーナ ----
 const panels = computed(() => {
-  // ランダム対戦は投票まで匿名
+  // レート対戦は投票まで匿名
   const anon = mode.value === 'random' && !voted.value
   const panel = (key, bot, messages) => ({
     key,
