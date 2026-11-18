@@ -32,8 +32,8 @@ def _login(module, user=USER):
     return patch(f"{module}.routes.get_current_user", return_value=user)
 
 
-def _rpc_error(message):
-    return APIError({"message": message, "code": "P0001", "hint": None, "details": None})
+def _rpc_error(message, details=None):
+    return APIError({"message": message, "code": "P0001", "hint": None, "details": details})
 
 
 # ============================================================
@@ -51,7 +51,9 @@ def _rpc_error(message):
 )
 def test_returns_401_when_not_logged_in(client, module, method, path):
     with _login(module, None), patch(f"{module}.routes.supabase") as db:
-        response = getattr(client, method)(path, json={"chatbot_id": CHATBOT_ID})
+        response = getattr(client, method)(
+            path, json={"chatbot_id": CHATBOT_ID, "expected_total": 1000}
+        )
 
         db.rpc.assert_not_called()
 
@@ -79,28 +81,37 @@ def test_purchase_cart_calls_rpc_with_cart_mode(client):
     assert response.get_json() == RPC_RESULT
 
 
-def test_purchase_cart_without_body(client):
+INVALID_TOTAL_BODIES = [
+    None,
+    {},
+    {"expected_total": None},
+    {"expected_total": -1},
+    {"expected_total": 1.5},
+    {"expected_total": "1000"},
+    {"expected_total": True},
+]
+
+
+@pytest.mark.parametrize("body", INVALID_TOTAL_BODIES)
+def test_purchase_cart_requires_valid_expected_total(client, body):
     with _login("purchases"), patch("purchases.routes.supabase") as db:
-        db.rpc.return_value.execute.return_value = _db_result(RPC_RESULT)
-
-        response = client.post("/api/purchases/cart")
-
-        db.rpc.assert_called_once_with(
-            "purchase_chatbots",
-            {"p_buyer_id": "buyer01", "p_chatbot_ids": None, "p_expected_total": None},
-        )
-
-    assert response.status_code == 201
-
-
-@pytest.mark.parametrize("expected_total", [-1, 1.5, "1000", True])
-def test_purchase_cart_rejects_invalid_expected_total(client, expected_total):
-    with _login("purchases"), patch("purchases.routes.supabase") as db:
-        response = client.post("/api/purchases/cart", json={"expected_total": expected_total})
+        response = client.post("/api/purchases/cart", json=body)
 
         db.rpc.assert_not_called()
 
     assert response.status_code == 400
+    assert "expected_total" in response.get_json()["error"]
+
+
+@pytest.mark.parametrize("body", INVALID_TOTAL_BODIES[1:])
+def test_purchase_product_requires_valid_expected_total(client, body):
+    with _login("purchases"), patch("purchases.routes.supabase") as db:
+        response = client.post("/api/purchases", json={"chatbot_id": CHATBOT_ID, **body})
+
+        db.rpc.assert_not_called()
+
+    assert response.status_code == 400
+    assert "expected_total" in response.get_json()["error"]
 
 
 # ============================================================
@@ -113,12 +124,13 @@ def test_purchase_product_normalizes_id(client):
         db.rpc.return_value.execute.return_value = _db_result(RPC_RESULT)
 
         response = client.post(
-            "/api/purchases", json={"chatbot_id": CHATBOT_ID.replace("-", "").upper()}
+            "/api/purchases",
+            json={"chatbot_id": CHATBOT_ID.replace("-", "").upper(), "expected_total": 1000},
         )
 
         db.rpc.assert_called_once_with(
             "purchase_chatbots",
-            {"p_buyer_id": "buyer01", "p_chatbot_ids": [CHATBOT_ID], "p_expected_total": None},
+            {"p_buyer_id": "buyer01", "p_chatbot_ids": [CHATBOT_ID], "p_expected_total": 1000},
         )
 
     assert response.status_code == 201
@@ -128,7 +140,9 @@ def test_purchase_product_normalizes_id(client):
 @pytest.mark.parametrize("body", [{}, {"chatbot_id": "abc"}, {"chatbot_id": 123}, []])
 def test_purchase_product_rejects_invalid_id(client, body):
     with _login("purchases"), patch("purchases.routes.supabase") as db:
-        response = client.post("/api/purchases", json=body)
+        response = client.post(
+            "/api/purchases", json={**body, "expected_total": 1000} if isinstance(body, dict) else body
+        )
 
         db.rpc.assert_not_called()
 
@@ -157,17 +171,34 @@ def test_maps_rpc_errors(client, code, status):
     with _login("purchases"), patch("purchases.routes.supabase") as db:
         db.rpc.return_value.execute.side_effect = _rpc_error(code)
 
-        response = client.post("/api/purchases", json={"chatbot_id": CHATBOT_ID})
+        response = client.post(
+            "/api/purchases", json={"chatbot_id": CHATBOT_ID, "expected_total": 1000}
+        )
 
     assert response.status_code == status
     assert "error" in response.get_json()
+    assert "chatbot_id" not in response.get_json()
+
+
+@pytest.mark.parametrize(
+    "code, status",
+    [("PRODUCT_NOT_FOUND", 404), ("OWN_PRODUCT", 400), ("ALREADY_PURCHASED", 409)],
+)
+def test_product_errors_include_chatbot_id(client, code, status):
+    with _login("purchases"), patch("purchases.routes.supabase") as db:
+        db.rpc.return_value.execute.side_effect = _rpc_error(code, CHATBOT_ID)
+
+        response = client.post("/api/purchases/cart", json={"expected_total": 1000})
+
+    assert response.status_code == status
+    assert response.get_json()["chatbot_id"] == CHATBOT_ID
 
 
 def test_unknown_rpc_error_returns_500(client):
     with _login("purchases"), patch("purchases.routes.supabase") as db:
         db.rpc.return_value.execute.side_effect = _rpc_error("COIN_TYPE_NOT_FOUND")
 
-        response = client.post("/api/purchases/cart")
+        response = client.post("/api/purchases/cart", json={"expected_total": 1000})
 
     assert response.status_code == 500
 

@@ -10,7 +10,7 @@ purchases_bp = Blueprint("purchases", __name__)
 
 LOGIN_REQUIRED_ERROR = "ログインが必要です"
 INVALID_ID_ERROR = "無効なchatbot_idです"
-INVALID_TOTAL_ERROR = "expected_total は0以上の整数で指定してください"
+INVALID_TOTAL_ERROR = "expected_total(画面に表示している合計金額)を0以上の整数で指定してください"
 
 # DB関数 purchase_chatbots が RAISE EXCEPTION で返すエラーコードと、APIで返す内容の対応。
 # 残高確認・購入記録の追加・コインの減算・カートからの削除を1トランザクションで行うため、
@@ -38,16 +38,15 @@ def _normalize_chatbot_id(value):
 
 def _parse_expected_total(body):
     """
-    expected_total を取り出す。
-    未指定なら (True, None)、正しい整数なら (True, 値)、不正なら (False, None) を返す。
+    expected_total(画面に表示している合計金額)を取り出す。
+    画面上の金額と実際の金額が違うまま購入が通らないよう必須にしている。
+    0以上の整数ならその値、未指定・不正ならNoneを返す。
     """
-    if "expected_total" not in body or body["expected_total"] is None:
-        return True, None
-    value = body["expected_total"]
+    value = body.get("expected_total")
     # bool は int のサブクラスなので、True/False を整数として受け付けないよう除外する
     if isinstance(value, bool) or not isinstance(value, int) or value < 0:
-        return False, None
-    return True, value
+        return None
+    return value
 
 
 def _purchase(buyer_id, chatbot_ids, expected_total):
@@ -65,7 +64,11 @@ def _purchase(buyer_id, chatbot_ids, expected_total):
         if error is None:
             raise
         status, message = error
-        return jsonify({"error": message}), status
+        body = {"error": message}
+        # 商品が原因のエラーは、DB関数が DETAIL に原因の chatbot_id を入れて返す
+        if getattr(e, "details", None):
+            body["chatbot_id"] = e.details
+        return jsonify(body), status
 
     return jsonify(response.data), 201
 
@@ -82,8 +85,8 @@ def purchase_cart():
     if current_user is None:
         return jsonify({"error": LOGIN_REQUIRED_ERROR}), 401
 
-    ok, expected_total = _parse_expected_total(_read_body())
-    if not ok:
+    expected_total = _parse_expected_total(_read_body())
+    if expected_total is None:
         return jsonify({"error": INVALID_TOTAL_ERROR}), 400
 
     return _purchase(current_user["user_id"], None, expected_total)
@@ -101,8 +104,8 @@ def purchase_product():
     if chatbot_id is None:
         return jsonify({"error": INVALID_ID_ERROR}), 400
 
-    ok, expected_total = _parse_expected_total(body)
-    if not ok:
+    expected_total = _parse_expected_total(body)
+    if expected_total is None:
         return jsonify({"error": INVALID_TOTAL_ERROR}), 400
 
     return _purchase(current_user["user_id"], [chatbot_id], expected_total)

@@ -14,6 +14,8 @@
 --
 -- エラーは RAISE EXCEPTION でメッセージにエラーコードを入れて返し、
 -- バックエンド(purchases/routes.py)がメッセージを見て HTTP ステータスに変換する。
+-- 商品が原因のエラー(PRODUCT_NOT_FOUND / OWN_PRODUCT / ALREADY_PURCHASED)は、
+-- どの商品が原因か分かるよう DETAIL に chatbot_id を入れる。
 --
 -- 両関数ともバックエンド(service_role)からのみ呼ぶ想定なので、
 -- anon / authenticated からは実行できないようにする。
@@ -37,19 +39,19 @@ $$;
 -- 購入
 -- ============================================================
 --
+-- p_expected_total(必須):
+--   画面に表示していた合計金額。実際の合計と違えば購入しない
+--   (表示から確定までの間に価格が変わったときに、知らない金額で買わせないため)。
 -- p_chatbot_ids:
 --   null  … カート内の商品をまとめて購入する(GET /api/cart に表示される商品と同じ範囲)
 --   配列  … 指定した商品を購入する(単品購入)
--- p_expected_total:
---   画面に表示していた合計金額。指定された場合、実際の合計と違えば購入しない
---   (表示から確定までの間に価格が変わったときに、知らない金額で買わせないため)。
 --
 -- 戻り値: {"purchases": [{purchase_id, chatbot_id, price}, ...], "total": 合計, "balance": 購入後の残高}
 
 create or replace function purchase_chatbots(
   p_buyer_id varchar,
-  p_chatbot_ids uuid[] default null,
-  p_expected_total integer default null
+  p_expected_total integer,
+  p_chatbot_ids uuid[] default null
 )
 returns jsonb
 language plpgsql
@@ -98,31 +100,31 @@ begin
 
   -- 購入できる商品か1件ずつ確認する(1件でも購入できなければ全体を購入しない)
   for v_item in
-    select id, b.chatbot_id, b.creator_id, b.price
-    from unnest(v_ids) as id
-    left join chatbot b on b.chatbot_id = id
+    select requested_id, b.chatbot_id, b.creator_id, b.price
+    from unnest(v_ids) as requested_id
+    left join chatbot b on b.chatbot_id = requested_id
       and b.is_listed = true
       and exists (select 1 from users s where s.user_id = b.creator_id and s.is_withdrawn = false)
   loop
     if v_item.chatbot_id is null or v_item.price is null or v_item.price < 0 then
-      raise exception 'PRODUCT_NOT_FOUND';
+      raise exception 'PRODUCT_NOT_FOUND' using detail = v_item.requested_id::text;
     end if;
     if v_item.creator_id = p_buyer_id then
-      raise exception 'OWN_PRODUCT';
+      raise exception 'OWN_PRODUCT' using detail = v_item.chatbot_id::text;
     end if;
     -- purchases.is_deleted は履歴の非表示用なので、購入済み判定には使わない
     if exists (
       select 1 from purchases
       where buyer_id = p_buyer_id and chatbot_id = v_item.chatbot_id
     ) then
-      raise exception 'ALREADY_PURCHASED';
+      raise exception 'ALREADY_PURCHASED' using detail = v_item.chatbot_id::text;
     end if;
   end loop;
 
   select coalesce(sum(price), 0)::integer into v_total
   from chatbot where chatbot_id = any(v_ids);
 
-  if p_expected_total is not null and p_expected_total <> v_total then
+  if p_expected_total is distinct from v_total then
     raise exception 'TOTAL_MISMATCH';
   end if;
 
@@ -164,6 +166,6 @@ end;
 $$;
 
 revoke execute on function get_coin_balance(varchar) from public, anon, authenticated;
-revoke execute on function purchase_chatbots(varchar, uuid[], integer) from public, anon, authenticated;
+revoke execute on function purchase_chatbots(varchar, integer, uuid[]) from public, anon, authenticated;
 grant execute on function get_coin_balance(varchar) to service_role;
-grant execute on function purchase_chatbots(varchar, uuid[], integer) to service_role;
+grant execute on function purchase_chatbots(varchar, integer, uuid[]) to service_role;
