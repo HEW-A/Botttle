@@ -1,3 +1,4 @@
+import re
 import uuid
 
 from flask import Blueprint, jsonify, request
@@ -10,7 +11,7 @@ products_bp = Blueprint("products", __name__)
 # chatbot.creator_id の外部キー名を明示する。
 # !inner にすると、退会済みユーザーの行は結合の段階で除外される。
 PRODUCT_COLUMNS = (
-    "chatbot_id, bot_name, price, description, thumbnail_url, "
+    "chatbot_id, bot_name, price, description, thumbnail_url, category_id, "
     "users!chatbot_creator_id_fkey!inner(username), "
     "category(category_name)"
 )
@@ -19,15 +20,23 @@ DEFAULT_LIMIT = 20
 MAX_LIMIT = 100
 PAGING_ERROR = f"limit は1〜{MAX_LIMIT}、offset は0以上の整数で指定してください"
 
+# category.category_id は smallint で、1から採番される
+CATEGORY_ID_MIN = 1
+CATEGORY_ID_MAX = 32767
+CATEGORY_ID_ERROR = f"category_id は{CATEGORY_ID_MIN}〜{CATEGORY_ID_MAX}の整数で指定してください"
+# 半角数字だけを許可する(後ろの空白・符号・小数点・全角は400にする)
+CATEGORY_ID_PATTERN = re.compile(r"[0-9]+")
+
 
 def _to_product(row):
-    """DBの1行を、APIで返す7項目の辞書に変換する"""
+    """DBの1行を、APIで返す8項目の辞書に変換する"""
     return {
         "chatbot_id": row["chatbot_id"],
         "bot_name": row["bot_name"],
         "price": row["price"],
         "description": row["description"],
         "thumbnail_url": row["thumbnail_url"],
+        "category_id": row.get("category_id"),
         "username": (row.get("users") or {}).get("username"),
         "category_name": (row.get("category") or {}).get("category_name"),
     }
@@ -41,6 +50,26 @@ def _parse_int(value, default):
         return int(value)
     except ValueError:
         return None
+
+
+def _parse_category_id(value):
+    """
+    指定なしならNone、正しい値ならint、不正な値なら False を返す。
+    - 未指定・空・半角スペースだけ(何個でも)は、指定なしとして扱う
+    - 先頭の半角スペース1個だけは無視する(" 1" は 1)
+    - 先頭に2個以上、後ろに空白、全角スペースなどは不正(400)
+    DBの smallint の範囲外をそのまま渡すとDB側で500になるため、ここで止める。
+    """
+    if value is None or value.strip(" ") == "":
+        return None
+    if value.startswith(" "):
+        value = value[1:]
+    if not CATEGORY_ID_PATTERN.fullmatch(value):
+        return False
+    number = int(value)
+    if not (CATEGORY_ID_MIN <= number <= CATEGORY_ID_MAX):
+        return False
+    return number
 
 
 def _listed_products_query():
@@ -61,9 +90,17 @@ def list_products():
     if limit is None or offset is None or not (1 <= limit <= MAX_LIMIT) or offset < 0:
         return jsonify({"error": PAGING_ERROR}), 400
 
+    category_id = _parse_category_id(request.args.get("category_id"))
+    if category_id is False:
+        return jsonify({"error": CATEGORY_ID_ERROR}), 400
+
+    query = _listed_products_query()
+    if category_id is not None:
+        # 存在しないIDの場合は、該当なしとして [] が返る
+        query = query.eq("category_id", category_id)
+
     response = (
-        _listed_products_query()
-        .order("create_at", desc=True)
+        query.order("create_at", desc=True)
         .order("chatbot_id", desc=True)
         .range(offset, offset + limit - 1)
         .execute()
