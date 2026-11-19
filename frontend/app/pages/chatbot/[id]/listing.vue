@@ -22,8 +22,8 @@
             </svg>
           </div>
           <div class="flex flex-col gap-2">
-            <h2 class="text-xl font-bold text-slate-900">出品が完了しました</h2>
-            <p class="text-sm text-slate-500">「{{ name }}」をマーケットに公開しました。</p>
+            <h2 class="text-xl font-bold text-slate-900">{{ completionMode === 'update' ? '出品内容を更新しました' : '出品が完了しました' }}</h2>
+            <p class="text-sm text-slate-500">「{{ name }}」を{{ completionMode === 'update' ? '更新しました。' : 'マーケットに公開しました。' }}</p>
           </div>
           <div class="flex flex-wrap justify-center gap-3">
             <NuxtLink :to="`/chatbot/${chatbotId}`" class="border-2 border-blue-600 bg-blue-600 px-7 py-3 text-sm font-bold text-white">
@@ -37,8 +37,8 @@
 
         <div v-else class="flex flex-col gap-9">
           <div class="flex flex-col gap-1.5">
-            <h1 class="text-2xl font-bold text-slate-900">チャットボットを出品する</h1>
-            <p class="text-sm leading-relaxed text-slate-500">必要事項を入力して、マーケットに公開しましょう。</p>
+            <h1 class="text-2xl font-bold text-slate-900">{{ isListed ? 'チャットボットの出品内容を更新する' : 'チャットボットを出品する' }}</h1>
+            <p class="text-sm leading-relaxed text-slate-500">{{ isListed ? '現在の出品内容を変更できます。' : '必要事項を入力して、マーケットに公開しましょう。' }}</p>
           </div>
 
           <div class="flex flex-col gap-6 border-2 border-slate-900 bg-white p-8">
@@ -131,7 +131,7 @@
               :disabled="!canSubmit || submitting"
               @click="openPreview"
             >
-              {{ submitting ? '出品中…' : '出品する' }}
+              {{ submitting ? (isListed ? '更新中…' : '出品中…') : (isListed ? '出品内容を更新する' : '出品する') }}
             </button>
           </div>
         </div>
@@ -159,7 +159,7 @@
               編集に戻る
             </button>
             <button type="button" :disabled="submitting" class="flex-1 border-2 border-blue-600 bg-blue-600 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-300 disabled:border-slate-300" @click="confirmPublish">
-              {{ submitting ? '出品中…' : 'この内容で出品する' }}
+              {{ submitting ? (isListed ? '更新中…' : '出品中…') : (isListed ? 'この内容で更新する' : 'この内容で出品する') }}
             </button>
           </div>
           <p v-if="formError" class="text-sm font-bold text-red-600">{{ formError }}</p>
@@ -201,6 +201,8 @@ const price = ref('')
 const description = ref('')
 const previewOpen = ref(false)
 const published = ref(false)
+const isListed = ref(false)
+const completionMode = ref('publish')
 const loading = ref(true)
 const submitting = ref(false)
 const loadError = ref('')
@@ -246,6 +248,7 @@ async function loadListing() {
     price.value = bot.price == null ? '' : String(bot.price)
     description.value = bot.description || ''
     thumbnail.value = bot.thumbnail_url || null
+    isListed.value = Boolean(bot.is_listed)
   } catch (error) {
     loadError.value = apiErrorMessage(error, '出品情報の読み込みに失敗しました。')
   } finally {
@@ -259,7 +262,6 @@ function openPicker() {
 
 function readThumbnail(file) {
   formError.value = ''
-  thumbnailFile.value = null
   if (!file) return
   if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
     formError.value = 'サムネイル画像はJPEG、PNG、WebP形式で指定してください。'
@@ -288,7 +290,7 @@ function handleDrop(e) {
 }
 
 function handlePriceInput(e) {
-  price.value = e.target.value.replace(/[^0-9]/g, '')
+  price.value = e.target.value.replace(/[^0-9]/g, '').replace(/^0+/, '')
 }
 
 function openPreview() {
@@ -303,6 +305,7 @@ function closePreview() {
 async function confirmPublish() {
   if (!canSubmit.value || submitting.value) return
 
+  const wasListed = isListed.value
   submitting.value = true
   formError.value = ''
   const body = new FormData()
@@ -320,6 +323,8 @@ async function confirmPublish() {
       body,
     })
     previewOpen.value = false
+    completionMode.value = wasListed ? 'update' : 'publish'
+    isListed.value = true
     published.value = true
   } catch (error) {
     formError.value = apiErrorMessage(error, '出品に失敗しました。')

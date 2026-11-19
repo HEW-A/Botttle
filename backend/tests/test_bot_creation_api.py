@@ -117,8 +117,8 @@ def test_create_bot_success(client):
     assert "1件のPDFを保存しました" in body["message"]
 
 
-def test_create_bot_success_with_partial_pdf_failures(client):
-    """PDFが一部失敗しても、chatbot作成自体は201で成功すること"""
+def test_create_bot_removes_chatbot_when_all_pdfs_fail(client):
+    """PDFが全件失敗した場合は、先に作成したchatbotも削除すること。"""
     fake_user = {"user_id": "taro123"}
     data = {
         "bot_name": "テストボット",
@@ -137,11 +137,38 @@ def test_create_bot_success_with_partial_pdf_failures(client):
 
         response = client.post("/api/bots", data=data, content_type="multipart/form-data")
 
-    assert response.status_code == 201
+    assert response.status_code == 400
     body = response.get_json()
-    assert body["uploaded"] == []
     assert body["failed"] == [{"file_name": "manual.pdf", "reason": "PDFファイルではありません"}]
-    assert "0件のPDFを保存しました" in body["message"]
+    assert "作成できませんでした" in body["error"]
+    delete_query = mock_supabase.table.return_value.delete.return_value
+    delete_query.eq.assert_called_once_with("chatbot_id", "chatbot-uuid-1")
+    delete_query.eq.return_value.eq.assert_called_once_with("creator_id", "taro123")
+
+
+def test_create_bot_reports_partial_pdf_failures(client):
+    """成功したPDFがあれば、一部失敗の内容を含めて201を返すこと。"""
+    fake_user = {"user_id": "taro123"}
+    data = {
+        "bot_name": "テストボット",
+        "files": _dummy_file(),
+    }
+    failed = [{"file_name": "broken.pdf", "reason": "PDFの読み込みに失敗しました"}]
+
+    with patch("bot_creation.routes.get_current_user", return_value=fake_user), \
+         patch("bot_creation.routes.supabase") as mock_supabase, \
+         patch("bot_creation.routes._process_pdfs", return_value=(
+             [{"pdf_id": "pdf-1", "file_name": "manual.pdf"}], failed
+         )):
+        mock_chatbot_result = MagicMock()
+        mock_chatbot_result.data = [{"chatbot_id": "chatbot-uuid-1"}]
+        mock_supabase.table.return_value.insert.return_value.execute.return_value = mock_chatbot_result
+
+        response = client.post("/api/bots", data=data, content_type="multipart/form-data")
+
+    assert response.status_code == 201
+    assert response.get_json()["failed"] == failed
+    mock_supabase.table.return_value.delete.assert_not_called()
 
 
 def test_upload_pdf_uses_storage_safe_key_for_japanese_filename():

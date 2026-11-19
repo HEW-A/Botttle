@@ -87,6 +87,9 @@
         <div class="flex flex-col items-center gap-1.5 text-center">
           <h2 class="text-[19px] font-bold text-slate-900">チャットボットが完成しました</h2>
           <p class="text-[13px] leading-relaxed text-slate-500">作成したチャットボットを出品するか、動作をテストできます。</p>
+          <p v-if="creationWarning" class="text-[12px] font-semibold leading-relaxed text-amber-700" role="alert">
+            {{ creationWarning }}
+          </p>
         </div>
         <div class="mt-1.5 flex w-full gap-2.5">
           <button type="button" class="flex-1 border-2 border-slate-700 bg-white py-3 text-sm font-bold text-slate-700" @click="goToTest">テストする</button>
@@ -123,6 +126,7 @@ const stage = ref('setup') // 'setup' | 'creating' | 'created'
 const dragOver = ref(false)
 const createdChatbotId = ref('')
 const createError = ref('')
+const creationWarning = ref('')
 
 const canCreate = computed(() => files.value.length > 0)
 const displayFiles = computed(() =>
@@ -173,6 +177,7 @@ async function createBot() {
 
   stage.value = 'creating'
   createError.value = ''
+  creationWarning.value = ''
   createdChatbotId.value = ''
 
   const formData = new FormData()
@@ -192,14 +197,20 @@ async function createBot() {
       throw new Error('作成したチャットボットのIDを取得できませんでした。')
     }
 
-    if (!result.uploaded?.length && result.failed?.length) {
-      throw new Error(result.failed[0].reason || 'PDFの保存に失敗しました。')
-    }
-
     createdChatbotId.value = result.chatbot_id
+    if (result.failed?.length) {
+      const details = result.failed
+        .map((item) => `${item.file_name}: ${item.reason}`)
+        .join('、')
+      creationWarning.value = `一部のPDFを保存できませんでした。${details}`
+    }
     stage.value = 'created'
   } catch (error) {
-    createError.value = error?.data?.error || error?.message || 'チャットボットの作成に失敗しました。'
+    const message = error?.data?.error || error?.message || 'チャットボットの作成に失敗しました。'
+    const details = error?.data?.failed
+      ?.map((item) => `${item.file_name}: ${item.reason}`)
+      .join('、')
+    createError.value = details ? `${message}（${details}）` : message
     stage.value = 'setup'
   }
 }
@@ -209,6 +220,7 @@ function closeModal() {
   files.value = []
   createdChatbotId.value = ''
   createError.value = ''
+  creationWarning.value = ''
 }
 
 function goToTest() {

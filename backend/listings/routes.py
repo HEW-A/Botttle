@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 import uuid
+from urllib.parse import unquote, urlparse
 
 from flask import Blueprint, current_app, jsonify, request
 
@@ -137,6 +138,31 @@ def _upload_thumbnail(chatbot_id, thumbnail):
     return file_path, public_url
 
 
+def _thumbnail_path_from_url(url, chatbot_id):
+    """このBotの公開サムネイルURLから、Storage内のパスを取り出す。"""
+    if not url:
+        return None
+
+    marker = f"/storage/v1/object/public/{THUMBNAIL_BUCKET}/"
+    path = unquote(urlparse(url).path)
+    if marker not in path:
+        return None
+
+    file_path = path.split(marker, 1)[1]
+    if not file_path.startswith(f"{chatbot_id}/"):
+        return None
+    return file_path
+
+
+def _remove_thumbnail(file_path):
+    if not file_path:
+        return
+    try:
+        supabase.storage.from_(THUMBNAIL_BUCKET).remove([file_path])
+    except Exception:
+        current_app.logger.exception("サムネイル画像の削除に失敗しました")
+
+
 def _storage_error_response(message, error):
     current_app.logger.exception(message)
     body = {"error": message}
@@ -189,6 +215,7 @@ def publish_listing(chatbot_id):
         return jsonify({"error": str(error)}), 400
 
     uploaded_path = None
+    old_thumbnail_path = None
     if thumbnail is not None:
         try:
             uploaded_path, public_url = _upload_thumbnail(normalized_id, thumbnail)
@@ -197,6 +224,9 @@ def publish_listing(chatbot_id):
                 "サムネイル画像の保存に失敗しました", error
             )
         values["thumbnail_url"] = public_url
+        old_thumbnail_path = _thumbnail_path_from_url(
+            bot.get("thumbnail_url"), normalized_id
+        )
 
     values["is_listed"] = True
     values["update_at"] = datetime.now(timezone.utc).isoformat()
@@ -210,19 +240,16 @@ def publish_listing(chatbot_id):
             .execute()
         )
     except Exception:
-        if uploaded_path:
-            try:
-                supabase.storage.from_(THUMBNAIL_BUCKET).remove([uploaded_path])
-            except Exception:
-                pass
+        current_app.logger.exception("出品情報の保存に失敗しました")
+        _remove_thumbnail(uploaded_path)
         return jsonify({"error": "出品情報の保存に失敗しました"}), 500
 
     if not response.data:
-        if uploaded_path:
-            try:
-                supabase.storage.from_(THUMBNAIL_BUCKET).remove([uploaded_path])
-            except Exception:
-                pass
+        current_app.logger.error("出品情報の更新結果が空でした")
+        _remove_thumbnail(uploaded_path)
         return jsonify({"error": "出品情報の保存に失敗しました"}), 500
+
+    if uploaded_path and old_thumbnail_path and old_thumbnail_path != uploaded_path:
+        _remove_thumbnail(old_thumbnail_path)
 
     return jsonify(response.data[0])

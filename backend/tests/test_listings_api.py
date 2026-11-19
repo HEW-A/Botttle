@@ -5,7 +5,12 @@ import pytest
 from werkzeug.datastructures import FileStorage
 
 from app import create_app
-from listings.routes import _find_owned_bot, _read_thumbnail, _upload_thumbnail
+from listings.routes import (
+    _find_owned_bot,
+    _read_thumbnail,
+    _thumbnail_path_from_url,
+    _upload_thumbnail,
+)
 
 
 CHATBOT_ID = "59e511a0-efcf-4aa8-98cf-d6fa5786e52b"
@@ -253,6 +258,42 @@ def test_publish_with_thumbnail_stores_public_url(client):
     assert response.status_code == 200
 
 
+def test_publish_replaces_old_thumbnail_after_db_update(client):
+    old_path = f"{CHATBOT_ID}/old-image.png"
+    old_url = (
+        "https://example.supabase.co/storage/v1/object/public/"
+        f"chatbot_thumbnails/{old_path}"
+    )
+    bot = {**BOT, "thumbnail_url": old_url}
+    saved = {**bot, "thumbnail_url": "https://example.test/new-image.png"}
+    thumbnail = (io.BytesIO(b"\x89PNG\r\n\x1a\ncontent"), "image.png")
+    data = {**_valid_form(), "thumbnail": thumbnail}
+
+    with (
+        _login(),
+        patch("listings.routes._find_owned_bot", return_value=bot),
+        patch("listings.routes._category_exists", return_value=True),
+        patch(
+            "listings.routes._upload_thumbnail",
+            return_value=(
+                f"{CHATBOT_ID}/new-image.png",
+                "https://example.test/new-image.png",
+            ),
+        ),
+        patch("listings.routes.supabase") as db,
+    ):
+        _set_update_result(db, [saved])
+        response = client.put(
+            f"/api/listings/{CHATBOT_ID}",
+            data=data,
+            content_type="multipart/form-data",
+        )
+
+        db.storage.from_.return_value.remove.assert_called_once_with([old_path])
+
+    assert response.status_code == 200
+
+
 def test_publish_returns_500_when_thumbnail_upload_fails(client):
     thumbnail = (io.BytesIO(b"\x89PNG\r\n\x1a\ncontent"), "image.png")
     data = {**_valid_form(), "thumbnail": thumbnail}
@@ -339,3 +380,17 @@ def test_upload_thumbnail_uses_bot_folder_and_public_url():
         bucket.get_public_url.assert_called_once_with(path)
 
     assert url == "https://example.test/image.png"
+
+
+def test_thumbnail_path_from_url_accepts_only_owned_bot_path():
+    path = f"{CHATBOT_ID}/image%20name.png"
+    url = (
+        "https://example.supabase.co/storage/v1/object/public/"
+        f"chatbot_thumbnails/{path}"
+    )
+
+    assert _thumbnail_path_from_url(url, CHATBOT_ID) == (
+        f"{CHATBOT_ID}/image name.png"
+    )
+    assert _thumbnail_path_from_url(url, "00000000-0000-0000-0000-000000000000") is None
+    assert _thumbnail_path_from_url("https://example.test/not-storage/image.png", CHATBOT_ID) is None
