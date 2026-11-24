@@ -85,8 +85,8 @@
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="none">
                       <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z" />
                     </svg>
-                    {{ product.rating }}
-                    <span class="font-normal text-slate-400">({{ product.reviewCount }}件)</span>
+                    {{ displayRating }}
+                    <span class="font-normal text-slate-400">({{ displayReviewCount }}件)</span>
                   </div>
                   <span>販売実績 {{ product.salesCount.toLocaleString() }}件</span>
                   <span>出品者: <a href="#" class="text-blue-600 hover:text-blue-700">{{ product.seller.name }}</a></span>
@@ -107,23 +107,11 @@
               </div>
             </section>
 
-            <section class="rounded-lg border border-slate-200 bg-white p-6">
-              <h2 class="mb-4 text-[15px] font-bold text-slate-900">購入者レビュー</h2>
-              <div class="flex flex-col gap-4">
-                <div
-                  v-for="(review, index) in product.reviews"
-                  :key="review.author"
-                  class="pb-4"
-                  :class="{ 'border-b border-slate-100': index < product.reviews.length - 1 }"
-                >
-                  <div class="mb-1.5 flex justify-between">
-                    <span class="text-[13px] font-bold text-slate-900">{{ review.author }}</span>
-                    <span class="text-xs text-slate-400">{{ review.date }}</span>
-                  </div>
-                  <p class="text-[13px] leading-relaxed text-slate-600">{{ review.text }}</p>
-                </div>
-              </div>
-            </section>
+            <ReviewsBotReviewSection
+              :chatbot-id="String(productId)"
+              mock-enabled
+              @summary="updateReviewSummary"
+            />
           </div>
 
           <!-- 価格・出品者 -->
@@ -250,6 +238,21 @@ const fallbackProduct = {
 }
 
 const product = mockProducts[productId] ?? fallbackProduct
+
+const liveAverageRating = ref(null)
+const liveReviewCount = ref(null)
+const displayRating = computed(() => {
+  if (liveReviewCount.value !== null) {
+    return liveAverageRating.value === null ? '-' : liveAverageRating.value.toFixed(1)
+  }
+  return product.rating
+})
+const displayReviewCount = computed(() => liveReviewCount.value ?? product.reviewCount)
+
+function updateReviewSummary({ averageRating, reviewCount }) {
+  liveAverageRating.value = averageRating
+  liveReviewCount.value = reviewCount
+}
 
 useHead({
   title: `${product.name} | botttle`,
