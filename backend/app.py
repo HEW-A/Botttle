@@ -13,6 +13,7 @@ from categories.routes import categories_bp
 from botarena.routes import botarena_bp
 from cart.routes import cart_bp
 from purchases.routes import purchases_bp
+from reviews.routes import reviews_bp
 from coins.routes import coins_bp
 from users.test import users_bp
 from common.test import common_bp
@@ -33,6 +34,7 @@ def create_app():
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(bot_creation_bp, url_prefix="/api/bots")
     app.register_blueprint(products_bp, url_prefix="/api/products")
+    app.register_blueprint(reviews_bp, url_prefix="/api/products")
     app.register_blueprint(categories_bp, url_prefix="/api/categories") 
     app.register_blueprint(botarena_bp, url_prefix="/api/botarena")
     app.register_blueprint(cart_bp, url_prefix="/api/cart")
