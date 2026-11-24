@@ -7,7 +7,7 @@
         <div class="flex flex-col gap-1.5">
           <h1 class="text-2xl font-bold text-slate-900">チャットボットを作成</h1>
           <p class="text-sm leading-relaxed text-slate-500">
-            PDFまたはtxt形式のファイルをアップロードすると、その内容をもとにチャットボットを作成します。
+            PDFファイルをアップロードすると、その内容をもとにチャットボットを作成します。
           </p>
         </div>
 
@@ -25,13 +25,13 @@
               <path d="M7 8l5-5 5 5"></path>
               <path d="M4 17v3a2 2 0 002 2h12a2 2 0 002-2v-3"></path>
             </svg>
-            <span class="text-[15px] font-bold text-slate-900">PDF、txtをアップロード</span>
+            <span class="text-[15px] font-bold text-slate-900">PDFをアップロード</span>
             <span class="text-xs text-slate-400">またはドラッグ&amp;ドロップ</span>
             <input
               ref="fileInputRef"
               type="file"
               multiple
-              accept=".pdf,.txt"
+              accept=".pdf,application/pdf"
               class="hidden"
               @change="handleFileChange"
             />
@@ -49,6 +49,10 @@
             </div>
             <button type="button" class="flex-none px-1 text-lg leading-none text-slate-400" @click="removeFile(index)">&times;</button>
           </div>
+
+          <p v-if="createError" class="text-sm font-semibold text-red-600" role="alert">
+            {{ createError }}
+          </p>
         </div>
 
         <button
@@ -83,6 +87,9 @@
         <div class="flex flex-col items-center gap-1.5 text-center">
           <h2 class="text-[19px] font-bold text-slate-900">チャットボットが完成しました</h2>
           <p class="text-[13px] leading-relaxed text-slate-500">作成したチャットボットを出品するか、動作をテストできます。</p>
+          <p v-if="creationWarning" class="text-[12px] font-semibold leading-relaxed text-amber-700" role="alert">
+            {{ creationWarning }}
+          </p>
         </div>
         <div class="mt-1.5 flex w-full gap-2.5">
           <button type="button" class="flex-1 border-2 border-slate-700 bg-white py-3 text-sm font-bold text-slate-700" @click="goToTest">テストする</button>
@@ -101,6 +108,7 @@ definePageMeta({
 })
 
 const router = useRouter()
+const config = useRuntimeConfig()
 
 useHead({
   title: 'チャットボットを作成 | botttle',
@@ -112,14 +120,13 @@ useHead({
   ],
 })
 
-const CREATE_DELAY_MS = 2200
-// バックエンド未連携のため、出品・テストページへの遷移確認用に固定のテストUUIDを使用する
-const TEST_CHATBOT_ID = '00000000-0000-0000-0000-000000000001'
-
 const fileInputRef = ref(null)
 const files = ref([])
 const stage = ref('setup') // 'setup' | 'creating' | 'created'
 const dragOver = ref(false)
+const createdChatbotId = ref('')
+const createError = ref('')
+const creationWarning = ref('')
 
 const canCreate = computed(() => files.value.length > 0)
 const displayFiles = computed(() =>
@@ -137,9 +144,14 @@ function formatSize(bytes) {
 }
 
 function addFiles(fileList) {
-  const accepted = Array.from(fileList || []).filter((file) => /\.(pdf|txt)$/i.test(file.name))
-  if (!accepted.length) return
-  files.value = [...files.value, ...accepted.map((file) => ({ name: file.name, size: file.size }))]
+  const accepted = Array.from(fileList || []).filter((file) => /\.pdf$/i.test(file.name))
+  if (!accepted.length) {
+    createError.value = 'PDFファイルを選択してください。'
+    return
+  }
+
+  createError.value = ''
+  files.value = [...files.value, ...accepted]
 }
 
 function handleFileChange(e) {
@@ -160,24 +172,66 @@ function openPicker() {
   fileInputRef.value?.click()
 }
 
-function createBot() {
+async function createBot() {
   if (!canCreate.value) return
+
   stage.value = 'creating'
-  setTimeout(() => {
+  createError.value = ''
+  creationWarning.value = ''
+  createdChatbotId.value = ''
+
+  const formData = new FormData()
+  const initialBotName = files.value[0].name.replace(/\.pdf$/i, '').trim() || '新しいチャットボット'
+  formData.append('bot_name', initialBotName.slice(0, 40))
+  files.value.forEach((file) => formData.append('files', file))
+
+  try {
+    const result = await $fetch('/api/bots', {
+      baseURL: config.public.apiBase,
+      method: 'POST',
+      credentials: 'include',
+      body: formData,
+    })
+
+    if (!result.chatbot_id) {
+      throw new Error('作成したチャットボットのIDを取得できませんでした。')
+    }
+
+    createdChatbotId.value = result.chatbot_id
+    if (result.failed?.length) {
+      const details = result.failed
+        .map((item) => `${item.file_name}: ${item.reason}`)
+        .join('、')
+      creationWarning.value = `一部のPDFを保存できませんでした。${details}`
+    }
     stage.value = 'created'
-  }, CREATE_DELAY_MS)
+  } catch (error) {
+    const message = error?.data?.error || error?.message || 'チャットボットの作成に失敗しました。'
+    const details = error?.data?.failed
+      ?.map((item) => `${item.file_name}: ${item.reason}`)
+      .join('、')
+    createError.value = details ? `${message}（${details}）` : message
+    stage.value = 'setup'
+  }
 }
 
 function closeModal() {
   stage.value = 'setup'
   files.value = []
+  createdChatbotId.value = ''
+  createError.value = ''
+  creationWarning.value = ''
 }
 
 function goToTest() {
-  router.push(`/chatbot/${TEST_CHATBOT_ID}/test`)
+  if (createdChatbotId.value) {
+    router.push(`/chatbot/${createdChatbotId.value}/test`)
+  }
 }
 
 function goToListing() {
-  router.push(`/chatbot/${TEST_CHATBOT_ID}/listing`)
+  if (createdChatbotId.value) {
+    router.push(`/chatbot/${createdChatbotId.value}/listing`)
+  }
 }
 </script>

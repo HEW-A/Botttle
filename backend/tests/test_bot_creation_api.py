@@ -2,8 +2,10 @@ import io
 from unittest.mock import patch, MagicMock
 
 import pytest
+from werkzeug.datastructures import FileStorage
 
 from app import create_app
+from bot_creation.routes import _upload_single_pdf
 
 
 @pytest.fixture
@@ -115,8 +117,8 @@ def test_create_bot_success(client):
     assert "1件のPDFを保存しました" in body["message"]
 
 
-def test_create_bot_success_with_partial_pdf_failures(client):
-    """PDFが一部失敗しても、chatbot作成自体は201で成功すること"""
+def test_create_bot_removes_chatbot_when_all_pdfs_fail(client):
+    """PDFが全件失敗した場合は、先に作成したchatbotも削除すること。"""
     fake_user = {"user_id": "taro123"}
     data = {
         "bot_name": "テストボット",
@@ -135,8 +137,62 @@ def test_create_bot_success_with_partial_pdf_failures(client):
 
         response = client.post("/api/bots", data=data, content_type="multipart/form-data")
 
-    assert response.status_code == 201
+    assert response.status_code == 400
     body = response.get_json()
-    assert body["uploaded"] == []
     assert body["failed"] == [{"file_name": "manual.pdf", "reason": "PDFファイルではありません"}]
-    assert "0件のPDFを保存しました" in body["message"]
+    assert "作成できませんでした" in body["error"]
+    delete_query = mock_supabase.table.return_value.delete.return_value
+    delete_query.eq.assert_called_once_with("chatbot_id", "chatbot-uuid-1")
+    delete_query.eq.return_value.eq.assert_called_once_with("creator_id", "taro123")
+
+
+def test_create_bot_reports_partial_pdf_failures(client):
+    """成功したPDFがあれば、一部失敗の内容を含めて201を返すこと。"""
+    fake_user = {"user_id": "taro123"}
+    data = {
+        "bot_name": "テストボット",
+        "files": _dummy_file(),
+    }
+    failed = [{"file_name": "broken.pdf", "reason": "PDFの読み込みに失敗しました"}]
+
+    with patch("bot_creation.routes.get_current_user", return_value=fake_user), \
+         patch("bot_creation.routes.supabase") as mock_supabase, \
+         patch("bot_creation.routes._process_pdfs", return_value=(
+             [{"pdf_id": "pdf-1", "file_name": "manual.pdf"}], failed
+         )):
+        mock_chatbot_result = MagicMock()
+        mock_chatbot_result.data = [{"chatbot_id": "chatbot-uuid-1"}]
+        mock_supabase.table.return_value.insert.return_value.execute.return_value = mock_chatbot_result
+
+        response = client.post("/api/bots", data=data, content_type="multipart/form-data")
+
+    assert response.status_code == 201
+    assert response.get_json()["failed"] == failed
+    mock_supabase.table.return_value.delete.assert_not_called()
+
+
+def test_upload_pdf_uses_storage_safe_key_for_japanese_filename():
+    """日本語の元ファイル名をStorageのオブジェクトキーへ含めないこと。"""
+    file = FileStorage(
+        stream=io.BytesIO(b"dummy pdf content"),
+        filename="応募企画資料.pdf",
+        content_type="application/pdf",
+    )
+
+    with patch("bot_creation.routes.supabase") as mock_supabase, \
+         patch("bot_creation.routes._validate_pdf", return_value=None), \
+         patch("bot_creation.routes._extract_text_from_pdf", return_value="本文"):
+        mock_result = MagicMock()
+        mock_result.data = [{"pdf_id": "pdf-1"}]
+        mock_supabase.table.return_value.insert.return_value.execute.return_value = mock_result
+
+        result = _upload_single_pdf("chatbot-uuid-1", file)
+
+    upload_path = mock_supabase.storage.from_.return_value.upload.call_args.args[0]
+    inserted_data = mock_supabase.table.return_value.insert.call_args.args[0]
+
+    assert upload_path.startswith("chatbot-uuid-1/")
+    assert upload_path.endswith(".pdf")
+    assert upload_path.isascii()
+    assert inserted_data["file_name"] == "応募企画資料.pdf"
+    assert result["file_name"] == "応募企画資料.pdf"

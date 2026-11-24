@@ -12,6 +12,7 @@ from products.routes import products_bp
 from categories.routes import categories_bp
 from botarena.routes import botarena_bp
 from cart.routes import cart_bp
+from listings.routes import listings_bp
 from reviews.routes import reviews_bp
 from purchases.routes import purchases_bp
 from coins.routes import coins_bp
@@ -37,6 +38,7 @@ def create_app():
     app.register_blueprint(categories_bp, url_prefix="/api/categories")
     app.register_blueprint(botarena_bp, url_prefix="/api/botarena")
     app.register_blueprint(cart_bp, url_prefix="/api/cart")
+    app.register_blueprint(listings_bp, url_prefix="/api/listings")
     app.register_blueprint(reviews_bp, url_prefix="/api/reviews")
     app.register_blueprint(purchases_bp, url_prefix="/api/purchases")
     app.register_blueprint(coins_bp, url_prefix="/api/coins")
