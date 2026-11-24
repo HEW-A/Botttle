@@ -26,13 +26,16 @@ jobs:
 
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          # latest だとメジャーアップデートで挙動が変わって急に失敗するので固定する
+          version: 3.3.0
 
       - name: Link project
         run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
 
+      # CLI v3 からデフォルトの対象がローカルDBになったので、--remote でリンク先を指定する
       - name: Show migration status
-        run: supabase migration list
+        run: supabase migration list --remote
 
+      # --yes: CI では確認プロンプトに答えられないため
       - name: Push migrations
-        run: supabase db push
+        run: supabase db push --remote --yes
