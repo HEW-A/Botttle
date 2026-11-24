@@ -1,7 +1,7 @@
 -- 開発用のダミーデータ（ホーム画面・商品詳細画面の表示確認用）
 --
--- ローカル環境では `supabase db reset` で migrations の後に自動で流れる（config.toml の [db.seed]）。
 -- 共有の Supabase に入れる場合は、SQL Editor にこのファイルの中身を貼り付けて実行する。
+-- （Supabase CLI でローカルDBを使う場合は、`supabase db reset` で migrations の後に自動で流れる）
 --
 -- 何度流しても同じ結果になるよう、主キーを固定して on conflict do nothing にしている。
 -- （既に同じIDの行がある場合は上書きせず、そのまま残す）
