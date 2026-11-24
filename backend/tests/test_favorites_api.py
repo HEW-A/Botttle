@@ -269,6 +269,19 @@ def test_add_favorite_returns_409_when_already_registered(client):
         "この商品は既にお気に入りに登録されています"
     )
 
+    def test_add_favorite_reraises_other_db_errors(client):
+        with _login(), patch("favorites.routes.supabase") as db:
+            tables = _tables(db)
+        _set_product(tables, [{"chatbot_id": CHATBOT_ID}])
+
+        tables["favorite_bot"].insert.return_value.execute.side_effect = (
+            APIError({"code": "23503", "message": "foreign key violation"})
+        )
+
+        response = client.post("/api/favorites", json={"chatbot_id": CHATBOT_ID})
+
+    assert response.status_code == 500
+
 
 # ============================================================
 # DELETE /api/favorites/<chatbot_id>
