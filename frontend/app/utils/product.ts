@@ -14,6 +14,7 @@ export function toProductCard(product: Product): ProductCard {
     id: product.chatbot_id,
     title: product.bot_name,
     tag: product.category_name,
+    categoryId: product.category_id,
     priceLabel: formatPrice(product.price),
     thumbnailUrl: product.thumbnail_url,
   }

@@ -35,6 +35,7 @@ describe('toProductCard', () => {
       id: '00000000-0000-0000-0000-000000000001',
       title: '対応品質評価AI「サポたん」',
       tag: 'カスタマーサポート型',
+      categoryId: 1,
       priceLabel: '48,000 BC',
       thumbnailUrl: 'https://example.com/thumb.png',
     })
@@ -43,6 +44,7 @@ describe('toProductCard', () => {
   it('カテゴリ・価格・サムネイルが未設定でも変換できる', () => {
     const card = toProductCard({ ...baseProduct, category_id: null, category_name: null, price: null, thumbnail_url: null })
     expect(card.tag).toBeNull()
+    expect(card.categoryId).toBeNull()
     expect(card.priceLabel).toBe('価格未設定')
     expect(card.thumbnailUrl).toBeNull()
   })

@@ -29,6 +29,8 @@ export interface ProductCard {
   title: string
   /** カテゴリ名。未設定なら null(タグを表示しない) */
   tag: string | null
+  /** タグの色を決めるためのカテゴリID */
+  categoryId: number | null
   /** 表示用に整形した価格(例: "12,000 BC") */
   priceLabel: string
   thumbnailUrl: string | null
