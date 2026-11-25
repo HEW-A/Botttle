@@ -2,11 +2,12 @@
 --
 -- レビューは購入1件につき1つなので、別テーブルにせず purchases の rating / comment に保存する
 -- (どちらも初期スキーマから存在するが、これまで使われていなかった列)。
---   rating      : ☆の数(1〜5)。null ならレビュー未投稿
---   comment     : レビュー本文(任意)
---   reviewed_at : レビューを投稿・最後に編集した日時(今回追加)
+--   rating    : ☆の数(1〜5)。null ならレビュー未投稿
+--   comment   : レビュー本文(任意)
+--   update_at : レビューを投稿・最後に編集した日時
 --
--- update_at は購入記録そのものの更新でも変わりうるため、レビューの日時としては使わない。
+-- 新しい列は足さず、update_at をレビューの日時として使う。
+-- そのため、レビュー以外の処理(購入履歴の非表示など)では update_at を更新しないこと。
 --
 -- 書き込み(投稿・編集・削除)はバックエンドから purchases を直接更新する(reviews/routes.py)。
 -- 一覧は「平均・件数・ページ分の行」を1回で返すため関数 get_product_reviews にまとめる
@@ -15,18 +16,14 @@
 begin;
 
 alter table purchases
-  add column reviewed_at timestamp with time zone;
+  add constraint purchases_rating_range check (rating between 1 and 5);
 
--- 既に rating が入っている行があれば、制約を付けられるよう日時を埋めておく
-update purchases set reviewed_at = update_at where rating is not null and reviewed_at is null;
-
-alter table purchases
-  add constraint purchases_rating_range check (rating between 1 and 5),
-  add constraint purchases_reviewed_at_with_rating check ((rating is null) = (reviewed_at is null));
+comment on column purchases.update_at is
+  'レビュー(rating / comment)を投稿・最後に編集した日時。レビュー以外の処理では更新しないこと';
 
 -- 商品ごとのレビュー一覧を新しい順に取り出すための索引
 create index purchases_reviews_idx
-  on purchases (chatbot_id, reviewed_at desc, purchase_id desc)
+  on purchases (chatbot_id, update_at desc, purchase_id desc)
   where rating is not null;
 
 commit;
@@ -41,6 +38,7 @@ commit;
 --
 -- 戻り値: {"rating_avg": 4.3 | null, "review_count": 件数,
 --          "reviews": [{username, rating, comment, reviewed_at}, ...]}
+-- reviewed_at には purchases.update_at を入れる。
 
 create or replace function get_product_reviews(
   p_chatbot_id uuid,
@@ -53,7 +51,7 @@ stable
 set search_path = public
 as $$
   with visible as (
-    select p.purchase_id, u.username, p.rating, p.comment, p.reviewed_at
+    select p.purchase_id, u.username, p.rating, p.comment, p.update_at as reviewed_at
     from purchases p
     join users u on u.user_id = p.buyer_id
     where p.chatbot_id = p_chatbot_id

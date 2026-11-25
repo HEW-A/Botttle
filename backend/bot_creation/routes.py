@@ -2,7 +2,7 @@ import io
 import uuid
 import re
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, current_app, request, jsonify
 try:
     from pypdf import PdfReader
 except ImportError:
@@ -73,7 +73,9 @@ def _upload_single_pdf(chatbot_id: str, file) -> dict:
     if error:
         raise ValueError(error)
 
-    unique_name = f"{uuid.uuid4()}_{file.filename}"
+    # Supabase Storageのオブジェクトキーには日本語などを含む元ファイル名を使わない。
+    # 利用者向けの元ファイル名は、下のfile_name列へそのまま保存する。
+    unique_name = f"{uuid.uuid4().hex}.pdf"
     file_path = f"{chatbot_id}/{unique_name}"
 
     supabase.storage.from_(BOT_PDF_BUCKET).upload(
@@ -143,6 +145,29 @@ def create_bot_with_pdfs():
     chatbot_id = chatbot_result.data[0]["chatbot_id"]
 
     uploaded, failed = _process_pdfs(chatbot_id, files)
+
+    if not uploaded:
+        try:
+            (
+                supabase.table("chatbot")
+                .delete()
+                .eq("chatbot_id", chatbot_id)
+                .eq("creator_id", creator_id)
+                .execute()
+            )
+        except Exception:
+            current_app.logger.exception(
+                "PDFを保存できなかったチャットボットの削除に失敗しました"
+            )
+            return jsonify({
+                "error": "チャットボット作成の後片付けに失敗しました",
+                "failed": failed,
+            }), 500
+
+        return jsonify({
+            "error": "PDFを保存できなかったため、チャットボットを作成できませんでした",
+            "failed": failed,
+        }), 400
 
     return jsonify({
         "message": f"チャットボットを作成し、{len(uploaded)}件のPDFを保存しました",

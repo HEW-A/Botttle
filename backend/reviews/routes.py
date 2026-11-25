@@ -26,7 +26,9 @@ DEFAULT_LIMIT = 20
 MAX_LIMIT = 100
 PAGING_ERROR = f"limit は1〜{MAX_LIMIT}、offset は0以上の整数で指定してください"
 
-REVIEW_COLUMNS = "rating, comment, reviewed_at"
+# purchases.update_at をレビューを投稿・最後に編集した日時として使う。
+# レビュー以外の処理(購入履歴の非表示など)では update_at を更新しないこと。
+REVIEW_COLUMNS = "rating, comment, update_at"
 
 
 def _normalize_chatbot_id(value):
@@ -76,7 +78,7 @@ def _to_review(row):
     return {
         "rating": row["rating"],
         "comment": row["comment"],
-        "reviewed_at": row["reviewed_at"],
+        "reviewed_at": row["update_at"],
     }
 
 
@@ -168,7 +170,7 @@ def put_review(chatbot_id):
     now = datetime.now(timezone.utc).isoformat()
     response = _own_purchases(
         supabase.table("purchases").update(
-            {"rating": rating, "comment": comment, "reviewed_at": now, "update_at": now}
+            {"rating": rating, "comment": comment, "update_at": now}
         ),
         current_user["user_id"],
         normalized_id,
@@ -196,7 +198,7 @@ def delete_review(chatbot_id):
     response = (
         _own_purchases(
             supabase.table("purchases").update(
-                {"rating": None, "comment": None, "reviewed_at": None, "update_at": now}
+                {"rating": None, "comment": None, "update_at": now}
             ),
             current_user["user_id"],
             normalized_id,

@@ -154,7 +154,7 @@ def test_get_my_review_when_not_purchased(client):
 def test_get_my_review_when_purchased_without_review(client):
     with _login(), patch("reviews.routes.supabase") as db:
         _select_chain(db).execute.return_value = _db_result(
-            [{"rating": None, "comment": None, "reviewed_at": None}]
+            [{"rating": None, "comment": None, "update_at": "2026-11-20T00:00:00+00:00"}]
         )
 
         response = client.get(f"/api/products/{CHATBOT_ID}/review")
@@ -163,18 +163,22 @@ def test_get_my_review_when_purchased_without_review(client):
 
 
 def test_get_my_review_filters_by_buyer_and_product(client):
-    row = {"rating": 4, "comment": "良い", "reviewed_at": REVIEWED_AT}
+    row = {"rating": 4, "comment": "良い", "update_at": REVIEWED_AT}
     with _login(), patch("reviews.routes.supabase") as db:
         _select_chain(db).execute.return_value = _db_result([row])
 
         response = client.get(f"/api/products/{CHATBOT_ID}/review")
 
         db.table.assert_called_once_with("purchases")
+        db.table.return_value.select.assert_called_once_with("rating, comment, update_at")
         select = db.table.return_value.select.return_value
         select.eq.assert_called_once_with("buyer_id", "buyer01")
         select.eq.return_value.eq.assert_called_once_with("chatbot_id", CHATBOT_ID)
 
-    assert response.get_json() == {"purchased": True, "review": row}
+    assert response.get_json() == {
+        "purchased": True,
+        "review": {"rating": 4, "comment": "良い", "reviewed_at": REVIEWED_AT},
+    }
 
 
 # ============================================================
@@ -185,7 +189,7 @@ def test_get_my_review_filters_by_buyer_and_product(client):
 def test_put_review_updates_own_purchase(client):
     with _login(), patch("reviews.routes.supabase") as db:
         _update_chain(db).execute.return_value = _db_result(
-            [{"purchase_id": "p-1", "rating": 5, "comment": "便利", "reviewed_at": REVIEWED_AT}]
+            [{"purchase_id": "p-1", "rating": 5, "comment": "便利", "update_at": REVIEWED_AT}]
         )
 
         response = client.put(
@@ -200,7 +204,8 @@ def test_put_review_updates_own_purchase(client):
 
     assert values["rating"] == 5
     assert values["comment"] == "便利"
-    assert values["reviewed_at"] == values["update_at"]
+    assert "update_at" in values
+    assert "reviewed_at" not in values
     assert response.status_code == 200
     assert response.get_json() == {"rating": 5, "comment": "便利", "reviewed_at": REVIEWED_AT}
 
@@ -210,7 +215,7 @@ def test_put_review_comment_is_optional(client, comment):
     body = {"rating": 3} if comment is None else {"rating": 3, "comment": comment}
     with _login(), patch("reviews.routes.supabase") as db:
         _update_chain(db).execute.return_value = _db_result(
-            [{"rating": 3, "comment": None, "reviewed_at": REVIEWED_AT}]
+            [{"rating": 3, "comment": None, "update_at": REVIEWED_AT}]
         )
 
         response = client.put(f"/api/products/{CHATBOT_ID}/review", json=body)
@@ -224,7 +229,7 @@ def test_put_review_comment_is_optional(client, comment):
 def test_put_review_accepts_max_length_comment(client):
     with _login(), patch("reviews.routes.supabase") as db:
         _update_chain(db).execute.return_value = _db_result(
-            [{"rating": 1, "comment": "あ" * 1000, "reviewed_at": REVIEWED_AT}]
+            [{"rating": 1, "comment": "あ" * 1000, "update_at": REVIEWED_AT}]
         )
 
         response = client.put(
@@ -295,7 +300,8 @@ def test_delete_review_clears_rating_and_comment(client):
 
     assert values["rating"] is None
     assert values["comment"] is None
-    assert values["reviewed_at"] is None
+    assert "update_at" in values
+    assert "reviewed_at" not in values
     assert response.status_code == 204
 
 
