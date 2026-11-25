@@ -29,8 +29,9 @@
       class="block border border-gray-200 hover:border-blue-600"
     >
       <div class="flex aspect-[4/3] items-center justify-center overflow-hidden bg-gray-100 text-xs tracking-widest text-gray-400">
-        <img v-if="card.thumbnailUrl" :src="card.thumbnailUrl" :alt="card.title" class="h-full w-full object-cover" loading="lazy" />
-        <span v-else>NO IMAGE</span>
+        <ProductThumbnail :src="card.thumbnailUrl" :alt="card.title">
+          <span>NO IMAGE</span>
+        </ProductThumbnail>
       </div>
       <div class="flex flex-col gap-2 p-3.5">
         <span v-if="card.tag" :class="categoryTagClass(card.categoryId)">{{ card.tag }}</span>
