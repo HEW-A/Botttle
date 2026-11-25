@@ -2,17 +2,17 @@ import { describe, expect, it } from 'vitest'
 import { DEFAULT_CATEGORY_ICON, categoryIcon, categoryTagClass } from '../../app/utils/category'
 
 describe('categoryIcon', () => {
-  it('1〜6 はそれぞれ専用のアイコンを返す', () => {
-    const icons = [1, 2, 3, 4, 5, 6].map((id) => categoryIcon(id))
+  it('1〜5 はそれぞれ専用のアイコンを返す', () => {
+    const icons = [1, 2, 3, 4, 5].map((id) => categoryIcon(id))
     for (const icon of icons) {
       expect(icon).not.toBe(DEFAULT_CATEGORY_ICON)
     }
-    // 6つとも別のアイコン
-    expect(new Set(icons).size).toBe(6)
+    // 5つとも別のアイコン
+    expect(new Set(icons).size).toBe(5)
   })
 
   it('対応の無いIDや未設定は共通のアイコンを返す', () => {
-    expect(categoryIcon(7)).toBe(DEFAULT_CATEGORY_ICON)
+    expect(categoryIcon(6)).toBe(DEFAULT_CATEGORY_ICON)
     expect(categoryIcon(0)).toBe(DEFAULT_CATEGORY_ICON)
     expect(categoryIcon(null)).toBe(DEFAULT_CATEGORY_ICON)
     expect(categoryIcon(undefined)).toBe(DEFAULT_CATEGORY_ICON)

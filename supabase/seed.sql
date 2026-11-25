@@ -12,16 +12,17 @@
 begin;
 
 -- ============================================================
--- カテゴリ（ホーム画面の「カテゴリから探す」の6つ）
+-- カテゴリ（共有の Supabase にあるカテゴリと同じIDと名前にしている）
 -- ============================================================
+-- フロントのカテゴリアイコン（frontend/app/utils/category.ts）もこのIDに合わせている。
+-- カテゴリを増やす・変える場合は、共有の Supabase・このファイル・アイコンの対応をそろえること。
 
 insert into category (category_id, category_name) values
-  (1, 'カスタマーサポート型'),
+  (1, '仕事・キャリア型'),
   (2, '予約・受付型'),
   (3, '多言語対応型'),
-  (4, '学習・教育型'),
-  (5, 'マーケティング支援型'),
-  (6, 'エンタメ・雑談型')
+  (4, 'カスタマーサポート型'),
+  (5, '学習・教育型')
 on conflict (category_id) do nothing;
 
 -- ID を固定して入れたので、次に採番される値が衝突しないよう連番を進めておく
@@ -48,11 +49,11 @@ on conflict (user_id) do nothing;
 insert into chatbot (chatbot_id, bot_name, creator_id, price, description, category_id, thumbnail_url, is_listed, create_at, update_at) values
   ('00000000-0000-0000-0000-000000000001', '対応品質評価AI「サポたん」', 'dummy_seller01', 48000,
    '問い合わせ内容を自動分類し、回答テンプレートを提案するカスタマーサポート特化型チャットボットです。既存のFAQデータを読み込ませるだけで、初回応答率と一次解決率の改善が見込めます。',
-   1, null, true, now() - interval '10 days', now() - interval '10 days'),
+   4, null, true, now() - interval '10 days', now() - interval '10 days'),
 
   ('00000000-0000-0000-0000-000000000002', 'FAQ自動応答ボット「サポやん」', 'dummy_seller01', 12000,
    'よくある質問への回答を24時間自動で行うボットです。社内マニュアルのPDFを読み込ませるだけで使い始められます。',
-   1, null, true, now() - interval '9 days', now() - interval '9 days'),
+   4, null, true, now() - interval '9 days', now() - interval '9 days'),
 
   ('00000000-0000-0000-0000-000000000003', '美容室向け予約ボット「よやくん」', 'dummy_seller02', 28000,
    '空き枠の案内から予約内容の確認まで、美容室の予約受付をチャットで完結させます。メニューや料金表の読み込みにも対応しています。',
@@ -64,19 +65,19 @@ insert into chatbot (chatbot_id, bot_name, creator_id, price, description, categ
 
   ('00000000-0000-0000-0000-000000000005', '英会話練習ボット「Talky」', 'dummy_seller03', 8000,
    '日常会話のロールプレイで英語のスピーキング練習ができるボットです。間違いをやさしく指摘してくれます。',
-   4, null, true, now() - interval '6 days', now() - interval '6 days'),
+   5, null, true, now() - interval '6 days', now() - interval '6 days'),
 
-  ('00000000-0000-0000-0000-000000000006', 'SNS運用アシスト「PostBuddy」', 'dummy_seller02', 19800,
-   '投稿文の案出しやハッシュタグの提案など、SNS運用を手伝うボットです。過去の投稿を読み込ませると文体を合わせます。',
-   5, null, true, now() - interval '5 days', now() - interval '5 days'),
+  ('00000000-0000-0000-0000-000000000006', '面接練習ボット「メンセツくん」', 'dummy_seller02', 19800,
+   '応募先の求人票を読み込ませると、想定質問を出して模擬面接を行うボットです。回答への改善ポイントも返します。',
+   1, null, true, now() - interval '5 days', now() - interval '5 days'),
 
-  ('00000000-0000-0000-0000-000000000007', '雑談相手ボット「おしゃべりモモ」', 'dummy_seller01', 3500,
-   'ちょっとした雑談や気分転換の相手になってくれるボットです。話題の振り方を設定で変えられます。',
-   6, null, true, now() - interval '4 days', now() - interval '4 days'),
+  ('00000000-0000-0000-0000-000000000007', 'ビジネスメール添削ボット「メルカク」', 'dummy_seller01', 3500,
+   '書いたメールの敬語や言い回しをチェックし、相手や場面に合わせた書き直し案を出すボットです。',
+   1, null, true, now() - interval '4 days', now() - interval '4 days'),
 
   ('00000000-0000-0000-0000-000000000008', '返品対応自動化ボット「Returnie」', 'dummy_seller01', 33000,
    '返品・交換の受付と、条件に応じた案内を自動化するボットです。返品ポリシーの文書を読み込ませて使います。',
-   1, null, true, now() - interval '3 days', now() - interval '3 days'),
+   4, null, true, now() - interval '3 days', now() - interval '3 days'),
 
   ('00000000-0000-0000-0000-000000000009', 'クリニック受付ボット「Carely」', 'dummy_seller02', 52000,
    '診療時間の案内や予約の受付、来院前の問診をチャットで行うクリニック向けのボットです。',
@@ -84,17 +85,17 @@ insert into chatbot (chatbot_id, bot_name, creator_id, price, description, categ
 
   ('00000000-0000-0000-0000-000000000010', '歴史学習ボット「レキシー」', 'dummy_seller03', 6000,
    '教科書の内容を読み込ませて、一問一答や時代の流れの解説ができる学習用ボットです。',
-   4, null, true, now() - interval '1 day', now() - interval '1 day'),
+   5, null, true, now() - interval '1 day', now() - interval '1 day'),
 
   -- 非出品（一覧・詳細に出ないことの確認用）
   ('00000000-0000-0000-0000-000000000011', '下書き中のボット「テストくん」', 'dummy_seller02', 1000,
    'まだ出品していないボットです。',
-   6, null, false, now() - interval '12 hours', now() - interval '12 hours'),
+   1, null, false, now() - interval '12 hours', now() - interval '12 hours'),
 
   -- 退会済みユーザーの出品（一覧・詳細に出ないことの確認用）
   ('00000000-0000-0000-0000-000000000012', '退会者のボット「のこりもの」', 'dummy_withdrawn', 2000,
    '退会済みユーザーが出品していたボットです。',
-   5, null, true, now() - interval '6 hours', now() - interval '6 hours')
+   3, null, true, now() - interval '6 hours', now() - interval '6 hours')
 on conflict (chatbot_id) do nothing;
 
 commit;
