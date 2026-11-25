@@ -74,7 +74,6 @@
       </label>
 
       <p v-if="saveError" class="mb-3 text-xs text-red-600">{{ saveError }}</p>
-      <p v-if="saveMessage" class="mb-3 text-xs font-bold text-green-700">{{ saveMessage }}</p>
 
       <div class="flex flex-wrap gap-2">
         <button
@@ -95,6 +94,46 @@
         </button>
       </div>
     </form>
+
+    <!-- 自分のレビューは GET /review の結果で出す(一覧のページに含まれていなくても表示できる) -->
+    <div
+      v-else-if="canUseReviewForm && canReview && myReview"
+      class="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4"
+    >
+      <div class="mb-1.5 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+          <h3 class="text-sm font-bold text-slate-900">あなたのレビュー</h3>
+          <span
+            class="flex gap-0.5"
+            role="img"
+            :aria-label="`評価${myReview.rating}点（5点満点）`"
+          >
+            <svg
+              v-for="star in 5"
+              :key="star"
+              class="h-4 w-4"
+              viewBox="0 0 24 24"
+              :fill="star <= myReview.rating ? '#f59e0b' : '#e2e8f0'"
+              aria-hidden="true"
+            >
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z" />
+            </svg>
+          </span>
+        </div>
+        <div class="flex items-center gap-3">
+          <time class="text-xs text-slate-400">{{ formatDate(myReview.reviewed_at) }}</time>
+          <button
+            type="button"
+            class="rounded border border-blue-200 bg-white px-2.5 py-1 text-xs font-bold text-blue-600 hover:bg-blue-50"
+            @click="startEditing"
+          >
+            レビュー変更
+          </button>
+        </div>
+      </div>
+      <p v-if="myReview.comment" class="whitespace-pre-wrap text-[13px] leading-relaxed text-slate-600">{{ myReview.comment }}</p>
+      <p v-if="saveMessage" class="mt-2 text-xs font-bold text-green-700">{{ saveMessage }}</p>
+    </div>
 
     <p v-else-if="canUseReviewForm && myReviewError" class="mb-5 text-xs text-red-600">{{ myReviewError }}</p>
     <p v-else-if="canUseReviewForm && !canReview && !myReviewLoading" class="mb-5 rounded-md bg-slate-50 px-4 py-3 text-xs text-slate-500">
@@ -135,17 +174,7 @@
               </svg>
             </span>
           </div>
-          <div class="flex items-center gap-3">
-            <time class="text-xs text-slate-400">{{ formatDate(review.reviewed_at) }}</time>
-            <button
-              v-if="isMyReview(review) && !isEditing"
-              type="button"
-              class="rounded border border-blue-200 bg-white px-2.5 py-1 text-xs font-bold text-blue-600 hover:bg-blue-50"
-              @click="startEditing"
-            >
-              レビュー変更
-            </button>
-          </div>
+          <time class="text-xs text-slate-400">{{ formatDate(review.reviewed_at) }}</time>
         </div>
         <p v-if="review.comment" class="whitespace-pre-wrap text-[13px] leading-relaxed text-slate-600">{{ review.comment }}</p>
       </article>
@@ -181,7 +210,7 @@ interface MyReviewResponse {
   review: MyReview | null
 }
 
-// 一覧APIの上限。自分のレビューが1ページ目から漏れにくいよう最大件数で取得する
+// 一覧APIの上限。ページ送りは未実装のため、最大件数で取得する
 const REVIEW_LIMIT = 100
 const MOCK_USERNAME = 'モック購入者'
 
@@ -199,13 +228,11 @@ const emit = defineEmits<{
 }>()
 
 const config = useRuntimeConfig()
-const { user, isLoggedIn } = storeToRefs(useAuthStore())
+const { isLoggedIn } = storeToRefs(useAuthStore())
 
 // 商品画面から明示されたローカル開発時だけ有効。本番ビルドでは常にfalseになる。
 const mockMode = computed(() => import.meta.dev && props.mockEnabled)
 const canUseReviewForm = computed(() => isLoggedIn.value || mockMode.value)
-// 一覧には purchase_id が無いため、username(usersで一意)で自分のレビューを見分ける
-const myUsername = computed(() => (mockMode.value ? MOCK_USERNAME : user.value?.username ?? null))
 
 const reviews = ref<Review[]>([])
 const averageRating = ref<number | null>(null)
@@ -340,7 +367,7 @@ async function submitReview() {
         comment,
         reviewed_at: now,
       }
-      const existingIndex = reviews.value.findIndex(isMyReview)
+      const existingIndex = reviews.value.findIndex(review => review.username === MOCK_USERNAME)
       if (existingIndex === -1) {
         reviews.value.unshift(mockReview)
       } else {
@@ -368,10 +395,6 @@ async function submitReview() {
   } finally {
     saving.value = false
   }
-}
-
-function isMyReview(review: Review) {
-  return myUsername.value !== null && review.username === myUsername.value
 }
 
 function startEditing() {
