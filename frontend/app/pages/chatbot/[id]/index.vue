@@ -169,11 +169,6 @@
               <p v-else-if="product.price === null" class="mt-2.5 text-center text-xs text-slate-500">
                 価格が設定されていないため、購入できません
               </p>
-              <div class="mt-4.5 flex flex-col gap-2.5 border-t border-slate-100 pt-4.5 text-xs text-slate-600">
-                <div class="flex justify-between"><span>提供形式</span><span class="font-bold text-slate-900">{{ PRODUCT_TERMS.format }}</span></div>
-                <div class="flex justify-between"><span>ライセンス</span><span class="font-bold text-slate-900">{{ PRODUCT_TERMS.license }}</span></div>
-                <div class="flex justify-between"><span>納品目安</span><span class="font-bold text-slate-900">{{ PRODUCT_TERMS.delivery }}</span></div>
-              </div>
             </div>
 
             <section class="rounded-lg border border-slate-200 bg-white p-5">
@@ -208,13 +203,6 @@ const { data: product, error, refresh } = await useProduct(productId)
 
 // 400(IDの形式が不正)も、利用者から見れば「その商品は無い」なので同じ表示にする
 const notFound = computed(() => [400, 404].includes(error.value?.statusCode))
-
-// 提供形式などはDBに項目が無く、今は全商品で共通のため固定の文言にしている
-const PRODUCT_TERMS = {
-  format: 'API + ソースコード一式',
-  license: '商用利用可',
-  delivery: '購入後 即時',
-}
 
 const sellerName = computed(() => product.value?.username || '出品者不明')
 
