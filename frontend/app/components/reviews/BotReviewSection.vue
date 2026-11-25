@@ -60,12 +60,13 @@
       </div>
 
       <label class="block">
-        <span class="mb-1.5 block text-xs font-bold text-slate-700">コメント</span>
+        <span class="mb-1.5 block text-xs font-bold text-slate-700">
+          コメント<span class="ml-1 font-normal text-slate-400">（任意）</span>
+        </span>
         <textarea
           v-model="commentInput"
           maxlength="1000"
           rows="4"
-          required
           placeholder="このボットを使った感想を入力してください"
           class="w-full resize-y rounded-md border border-slate-300 bg-white px-3 py-2 text-sm leading-relaxed text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline focus:outline-2 focus:outline-blue-600"
         ></textarea>
@@ -73,7 +74,6 @@
       </label>
 
       <p v-if="saveError" class="mb-3 text-xs text-red-600">{{ saveError }}</p>
-      <p v-if="saveMessage" class="mb-3 text-xs font-bold text-green-700">{{ saveMessage }}</p>
 
       <div class="flex flex-wrap gap-2">
         <button
@@ -95,6 +95,47 @@
       </div>
     </form>
 
+    <!-- 自分のレビューは GET /review の結果で出す(一覧のページに含まれていなくても表示できる) -->
+    <div
+      v-else-if="canUseReviewForm && canReview && myReview"
+      class="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4"
+    >
+      <div class="mb-1.5 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+          <h3 class="text-sm font-bold text-slate-900">あなたのレビュー</h3>
+          <span
+            class="flex gap-0.5"
+            role="img"
+            :aria-label="`評価${myReview.rating}点（5点満点）`"
+          >
+            <svg
+              v-for="star in 5"
+              :key="star"
+              class="h-4 w-4"
+              viewBox="0 0 24 24"
+              :fill="star <= myReview.rating ? '#f59e0b' : '#e2e8f0'"
+              aria-hidden="true"
+            >
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z" />
+            </svg>
+          </span>
+        </div>
+        <div class="flex items-center gap-3">
+          <time class="text-xs text-slate-400">{{ formatDate(myReview.reviewed_at) }}</time>
+          <button
+            type="button"
+            class="rounded border border-blue-200 bg-white px-2.5 py-1 text-xs font-bold text-blue-600 hover:bg-blue-50"
+            @click="startEditing"
+          >
+            レビュー変更
+          </button>
+        </div>
+      </div>
+      <p v-if="myReview.comment" class="whitespace-pre-wrap text-[13px] leading-relaxed text-slate-600">{{ myReview.comment }}</p>
+      <p v-if="saveMessage" class="mt-2 text-xs font-bold text-green-700">{{ saveMessage }}</p>
+    </div>
+
+    <p v-else-if="canUseReviewForm && myReviewError" class="mb-5 text-xs text-red-600">{{ myReviewError }}</p>
     <p v-else-if="canUseReviewForm && !canReview && !myReviewLoading" class="mb-5 rounded-md bg-slate-50 px-4 py-3 text-xs text-slate-500">
       このボットを購入したユーザーのみレビューを投稿できます。
     </p>
@@ -109,7 +150,7 @@
     <div v-else class="flex flex-col gap-4">
       <article
         v-for="(review, index) in reviews"
-        :key="review.purchase_id"
+        :key="review.username ?? index"
         class="pb-4"
         :class="{ 'border-b border-slate-100': index < reviews.length - 1 }"
       >
@@ -133,50 +174,45 @@
               </svg>
             </span>
           </div>
-          <div class="flex items-center gap-3">
-            <time class="text-xs text-slate-400">{{ formatDate(review.updated_at) }}</time>
-            <button
-              v-if="isMyReview(review) && !isEditing"
-              type="button"
-              class="rounded border border-blue-200 bg-white px-2.5 py-1 text-xs font-bold text-blue-600 hover:bg-blue-50"
-              @click="startEditing(review)"
-            >
-              レビュー変更
-            </button>
-          </div>
+          <time class="text-xs text-slate-400">{{ formatDate(review.reviewed_at) }}</time>
         </div>
-        <p class="whitespace-pre-wrap text-[13px] leading-relaxed text-slate-600">{{ review.comment }}</p>
+        <p v-if="review.comment" class="whitespace-pre-wrap text-[13px] leading-relaxed text-slate-600">{{ review.comment }}</p>
       </article>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
+// API: GET  /api/products/<id>/reviews  一覧と平均・件数(ログイン不要)
+//      GET  /api/products/<id>/review   自分のレビューと購入済みかどうか
+//      PUT  /api/products/<id>/review   投稿・上書き
 interface Review {
-  purchase_id: string
   username: string | null
   rating: number
-  comment: string
-  updated_at: string | null
+  comment: string | null
+  reviewed_at: string | null
 }
 
 interface ReviewListResponse {
-  average_rating: number | null
+  rating_avg: number | null
   review_count: number
   reviews: Review[]
 }
 
 interface MyReview {
-  purchase_id: string
   rating: number
-  comment: string
-  updated_at: string | null
+  comment: string | null
+  reviewed_at: string | null
 }
 
 interface MyReviewResponse {
-  can_review: boolean
+  purchased: boolean
   review: MyReview | null
 }
+
+// 一覧APIの上限。ページ送りは未実装のため、最大件数で取得する
+const REVIEW_LIMIT = 100
+const MOCK_USERNAME = 'モック購入者'
 
 const props = withDefaults(
   defineProps<{
@@ -204,11 +240,12 @@ const reviewCount = ref(0)
 const reviewsLoading = ref(true)
 const myReviewLoading = ref(false)
 const loadError = ref('')
+const myReviewError = ref('')
 
 const canReview = ref(false)
-const hasExistingReview = ref(false)
+const myReview = ref<MyReview | null>(null)
+const hasExistingReview = computed(() => myReview.value !== null)
 const isEditing = ref(false)
-const myReviewPurchaseId = ref<string | null>(null)
 const ratingInput = ref<number | ''>('')
 const hoveredRating = ref(0)
 const commentInput = ref('')
@@ -223,11 +260,10 @@ const canSubmit = computed(() => {
   const rating = Number(ratingInput.value)
   return (
     ratingInput.value !== '' &&
-    Number.isFinite(rating) &&
+    Number.isInteger(rating) &&
     rating >= 1 &&
     rating <= 5 &&
-    Number.isInteger(rating) &&
-    commentInput.value.trim().length > 0
+    commentInput.value.length <= 1000
   )
 })
 
@@ -236,26 +272,40 @@ function apiErrorMessage(error: unknown, fallback: string) {
   return fetchError?.data?.error || fallback
 }
 
+function emitSummary() {
+  emit('summary', {
+    averageRating: averageRating.value,
+    reviewCount: reviewCount.value,
+  })
+}
+
+function resetInputs() {
+  ratingInput.value = myReview.value?.rating ?? ''
+  commentInput.value = myReview.value?.comment ?? ''
+  hoveredRating.value = 0
+}
+
 async function loadReviews() {
   reviewsLoading.value = true
   loadError.value = ''
   if (mockMode.value) {
-    updateReviewSummary()
+    updateMockSummary()
     reviewsLoading.value = false
     return
   }
 
   try {
-    const result = await $fetch<ReviewListResponse>(`/api/reviews/${props.chatbotId}`, {
-      baseURL: config.public.apiBase,
-    })
+    const result = await $fetch<ReviewListResponse>(
+      `/api/products/${props.chatbotId}/reviews`,
+      {
+        baseURL: config.public.apiBase,
+        query: { limit: REVIEW_LIMIT },
+      },
+    )
     reviews.value = result.reviews
-    averageRating.value = result.average_rating
+    averageRating.value = result.rating_avg
     reviewCount.value = result.review_count
-    emit('summary', {
-      averageRating: result.average_rating,
-      reviewCount: result.review_count,
-    })
+    emitSummary()
   } catch (error) {
     loadError.value = apiErrorMessage(error, 'レビューの読み込みに失敗しました。')
   } finally {
@@ -265,14 +315,12 @@ async function loadReviews() {
 
 async function loadMyReview() {
   canReview.value = false
-  hasExistingReview.value = false
+  myReview.value = null
   isEditing.value = false
-  myReviewPurchaseId.value = null
-  ratingInput.value = ''
-  hoveredRating.value = 0
-  commentInput.value = ''
+  myReviewError.value = ''
   saveError.value = ''
   saveMessage.value = ''
+  resetInputs()
 
   if (mockMode.value) {
     canReview.value = true
@@ -284,21 +332,18 @@ async function loadMyReview() {
   myReviewLoading.value = true
   try {
     const result = await $fetch<MyReviewResponse>(
-      `/api/reviews/${props.chatbotId}/mine`,
+      `/api/products/${props.chatbotId}/review`,
       {
         baseURL: config.public.apiBase,
         credentials: 'include',
       },
     )
-    canReview.value = result.can_review
-    if (result.review) {
-      hasExistingReview.value = true
-      myReviewPurchaseId.value = result.review.purchase_id
-      ratingInput.value = result.review.rating
-      commentInput.value = result.review.comment
-    }
+    canReview.value = result.purchased
+    myReview.value = result.review
+    resetInputs()
   } catch (error) {
-    saveError.value = apiErrorMessage(error, '購入情報の確認に失敗しました。')
+    // フォームが出ない状態でも見えるよう、投稿エラーとは別に表示する
+    myReviewError.value = apiErrorMessage(error, '購入情報の確認に失敗しました。')
   } finally {
     myReviewLoading.value = false
   }
@@ -310,44 +355,39 @@ async function submitReview() {
   saving.value = true
   saveError.value = ''
   saveMessage.value = ''
+  const rating = Number(ratingInput.value)
+  // 空白だけのコメントは本文なしとして送る(APIも同じ扱い)
+  const comment = commentInput.value.trim() || null
   try {
     if (mockMode.value) {
       const now = new Date().toISOString()
       const mockReview: Review = {
-        purchase_id: 'mock-purchase-current-user',
-        username: 'モック購入者',
-        rating: Number(ratingInput.value),
-        comment: commentInput.value.trim(),
-        updated_at: now,
+        username: MOCK_USERNAME,
+        rating,
+        comment,
+        reviewed_at: now,
       }
-      const existingIndex = reviews.value.findIndex(
-        review => review.purchase_id === mockReview.purchase_id,
-      )
+      const existingIndex = reviews.value.findIndex(review => review.username === MOCK_USERNAME)
       if (existingIndex === -1) {
         reviews.value.unshift(mockReview)
       } else {
-        reviews.value[existingIndex] = mockReview
+        reviews.value.splice(existingIndex, 1)
+        reviews.value.unshift(mockReview)
       }
-      hasExistingReview.value = true
+      myReview.value = { rating, comment, reviewed_at: now }
       isEditing.value = false
-      myReviewPurchaseId.value = mockReview.purchase_id
       saveMessage.value = 'モックレビューを画面に反映しました。'
-      updateReviewSummary()
+      updateMockSummary()
       return
     }
 
-    const savedReview = await $fetch<MyReview>(`/api/reviews/${props.chatbotId}`, {
+    myReview.value = await $fetch<MyReview>(`/api/products/${props.chatbotId}/review`, {
       baseURL: config.public.apiBase,
       method: 'PUT',
       credentials: 'include',
-      body: {
-        rating: Number(ratingInput.value),
-        comment: commentInput.value.trim(),
-      },
+      body: { rating, comment },
     })
-    hasExistingReview.value = true
     isEditing.value = false
-    myReviewPurchaseId.value = savedReview.purchase_id
     saveMessage.value = 'レビューを保存しました。'
     await loadReviews()
   } catch (error) {
@@ -357,42 +397,28 @@ async function submitReview() {
   }
 }
 
-function isMyReview(review: Review) {
-  return review.purchase_id === myReviewPurchaseId.value
-}
-
-function startEditing(review: Review) {
-  if (!isMyReview(review)) return
-  ratingInput.value = review.rating
-  hoveredRating.value = 0
-  commentInput.value = review.comment
+function startEditing() {
+  if (!hasExistingReview.value) return
+  resetInputs()
   saveError.value = ''
   saveMessage.value = ''
   isEditing.value = true
 }
 
 function cancelEditing() {
-  const myReview = reviews.value.find(isMyReview)
-  if (myReview) {
-    ratingInput.value = myReview.rating
-    commentInput.value = myReview.comment
-  }
+  resetInputs()
   saveError.value = ''
   saveMessage.value = ''
-  hoveredRating.value = 0
   isEditing.value = false
 }
 
-function updateReviewSummary() {
+function updateMockSummary() {
   reviewCount.value = reviews.value.length
   averageRating.value = reviewCount.value
     ? reviews.value.reduce((total, review) => total + review.rating, 0) /
       reviewCount.value
     : null
-  emit('summary', {
-    averageRating: averageRating.value,
-    reviewCount: reviewCount.value,
-  })
+  emitSummary()
 }
 
 function formatDate(value: string | null) {
