@@ -61,39 +61,15 @@
         </div>
         <ProductCardGrid :products="newProducts" :status="newStatus" :error="newError" />
       </section>
-
-      <!-- ===== how it works ===== -->
-      <section id="how" class="py-14">
-        <CommonSectionTitle size="lg" class="mb-8 text-center">かんたん3ステップ</CommonSectionTitle>
-        <div class="grid grid-cols-1 gap-8 md:grid-cols-3">
-          <div v-for="step in steps" :key="step.title" class="px-3 text-center">
-            <div class="mx-auto mb-4 flex size-14 items-center justify-center border border-slate-200 bg-white text-primary">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" v-html="step.icon" />
-            </div>
-            <h3 class="mb-2 text-base font-bold text-slate-900">{{ step.title }}</h3>
-            <p class="mx-auto max-w-[32ch] text-sm text-slate-500">{{ step.description }}</p>
-          </div>
-        </div>
-      </section>
     </CommonPageContainer>
-
-    <!-- ===== trust ===== -->
-    <!-- 横幅いっぱいの帯にするため、PageContainer の外に置く -->
-    <section class="bg-slate-100">
-      <div class="mx-auto flex max-w-6xl flex-wrap justify-between gap-6 px-4 py-9 md:px-8">
-        <div v-for="trust in trustPoints" :key="trust.text" class="flex items-center gap-3">
-          <svg class="text-primary" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" v-html="trust.icon" />
-          <span class="text-sm text-slate-700">{{ trust.text }}</span>
-        </div>
-      </div>
-    </section>
 
     <!-- ===== CTA ===== -->
     <CommonPageContainer :padded="false" class="my-14">
       <UCard :ui="{ body: 'flex flex-col items-center gap-4 px-8 py-14 text-center sm:px-8 sm:py-14' }">
         <CommonSectionTitle size="lg">あなたのボットも、出品してみませんか？</CommonSectionTitle>
-        <p class="mx-auto max-w-[48ch] text-base text-slate-700">
-          使わなくなった業務効率化ボットも、趣味で作った雑談ボットも。誰かにとって価値があるかもしれません。
+        <p class="mx-auto max-w-[72ch] text-base text-slate-700">
+          PDFをアップロードするだけで簡単にチャットボットを作成できます。<br>
+          あなたの作成したチャットボットも誰かにとって価値があるかもしれません。
         </p>
         <UButton size="lg">出品をはじめる</UButton>
       </UCard>
@@ -120,37 +96,4 @@ const [
 
 // 注目は、読み込み中・取得失敗のときは枠を出し、取得できて0件のときだけ隠す
 const showFeatured = computed(() => featuredStatus.value !== 'success' || featuredProducts.value.length > 0)
-
-const steps = [
-  {
-    title: '1. 出品する',
-    description: 'ボットの概要・利用シーン・価格を入力するだけで出品完了。',
-    icon: '<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.29 7 12 12 20.71 7"></polyline><line x1="12" y1="22" x2="12" y2="12"></line>',
-  },
-  {
-    title: '2. メッセージでやり取り',
-    description: '気になる点は購入前にチャットで質問。安心して検討できます。',
-    icon: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>',
-  },
-  {
-    title: '3. 受け渡し・お支払い',
-    description: '事務局を介した安心決済で、コードやアカウントを受け渡し。',
-    icon: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M9 12l2 2 4-4"></path>',
-  },
-]
-
-const trustPoints = [
-  {
-    text: '本人確認済みユーザーのみ取引可能',
-    icon: '<circle cx="9" cy="7" r="4"></circle><path d="M17 21v-2a4 4 0 0 0-3-3.87"></path><path d="M23 21v-2a4 4 0 0 0-3-3.85"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path><path d="M1 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"></path>',
-  },
-  {
-    text: '事務局によるあんしんエスクロー決済',
-    icon: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>',
-  },
-  {
-    text: '受け渡し後もチャットでサポート',
-    icon: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>',
-  },
-]
 </script>
