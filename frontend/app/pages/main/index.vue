@@ -1,9 +1,10 @@
 <template>
   <div>
-    <CommonPageContainer class="flex flex-col gap-14">
+    <!-- セクションごとに上下の余白を持たせるため、PageContainer の上下の余白は外す -->
+    <CommonPageContainer :padded="false" class="pt-16">
       <!-- ===== categories ===== -->
-      <section id="categories">
-        <CommonSectionTitle class="mb-5">カテゴリから探す</CommonSectionTitle>
+      <section id="categories" class="py-10">
+        <CommonSectionTitle size="lg" class="mb-6">カテゴリから探す</CommonSectionTitle>
         <div v-if="categoriesStatus === 'pending' && categories.length === 0" class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
           <div v-for="n in 6" :key="n" class="h-[126px] animate-pulse border border-slate-200 bg-slate-100" />
         </div>
@@ -38,9 +39,9 @@
 
       <!-- ===== featured listings ===== -->
       <!-- 商品が新着の4件分しか無いときは、注目に出す商品が無いのでセクションごと隠す -->
-      <section v-if="showFeatured">
+      <section v-if="showFeatured" class="py-10">
         <div class="mb-5 flex items-baseline justify-between">
-          <CommonSectionTitle>注目のチャットボット</CommonSectionTitle>
+          <CommonSectionTitle size="lg">注目のチャットボット</CommonSectionTitle>
           <a href="#" class="inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:underline">
             もっと見る
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
@@ -50,9 +51,9 @@
       </section>
 
       <!-- ===== new arrivals ===== -->
-      <section>
+      <section class="py-10">
         <div class="mb-5 flex items-baseline justify-between">
-          <CommonSectionTitle>新着出品</CommonSectionTitle>
+          <CommonSectionTitle size="lg">新着出品</CommonSectionTitle>
           <a href="#" class="inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:underline">
             もっと見る
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
@@ -62,8 +63,8 @@
       </section>
 
       <!-- ===== how it works ===== -->
-      <section id="how">
-        <CommonSectionTitle class="mb-8 text-center">かんたん3ステップ</CommonSectionTitle>
+      <section id="how" class="py-14">
+        <CommonSectionTitle size="lg" class="mb-8 text-center">かんたん3ステップ</CommonSectionTitle>
         <div class="grid grid-cols-1 gap-8 md:grid-cols-3">
           <div v-for="step in steps" :key="step.title" class="px-3 text-center">
             <div class="mx-auto mb-4 flex size-14 items-center justify-center border border-slate-200 bg-white text-primary">
@@ -78,8 +79,8 @@
 
     <!-- ===== trust ===== -->
     <!-- 横幅いっぱいの帯にするため、PageContainer の外に置く -->
-    <section class="border-y border-slate-200 bg-white">
-      <div class="mx-auto flex max-w-7xl flex-wrap justify-between gap-6 px-4 py-8 md:px-6">
+    <section class="bg-slate-100">
+      <div class="mx-auto flex max-w-6xl flex-wrap justify-between gap-6 px-4 py-9 md:px-8">
         <div v-for="trust in trustPoints" :key="trust.text" class="flex items-center gap-3">
           <svg class="text-primary" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" v-html="trust.icon" />
           <span class="text-sm text-slate-700">{{ trust.text }}</span>
@@ -88,10 +89,10 @@
     </section>
 
     <!-- ===== CTA ===== -->
-    <CommonPageContainer>
+    <CommonPageContainer :padded="false" class="my-14">
       <UCard :ui="{ body: 'flex flex-col items-center gap-4 px-8 py-14 text-center sm:px-8 sm:py-14' }">
-        <CommonSectionTitle>あなたのボットも、出品してみませんか？</CommonSectionTitle>
-        <p class="mx-auto max-w-[48ch] text-sm text-slate-700">
+        <CommonSectionTitle size="lg">あなたのボットも、出品してみませんか？</CommonSectionTitle>
+        <p class="mx-auto max-w-[48ch] text-base text-slate-700">
           使わなくなった業務効率化ボットも、趣味で作った雑談ボットも。誰かにとって価値があるかもしれません。
         </p>
         <UButton size="lg">出品をはじめる</UButton>

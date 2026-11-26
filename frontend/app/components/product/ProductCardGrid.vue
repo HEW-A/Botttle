@@ -2,7 +2,7 @@
   <!-- 読み込み中 -->
   <div v-if="status === 'pending' && cards.length === 0" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
     <div v-for="n in skeletonCount" :key="n" class="animate-pulse border border-slate-200 bg-white">
-      <div class="aspect-[4/3] bg-slate-100" />
+      <div class="aspect-[4/3] bg-slate-200" />
       <div class="flex flex-col gap-2 p-3.5">
         <div class="h-5 w-20 bg-slate-100" />
         <div class="h-5 w-full bg-slate-100" />
@@ -28,7 +28,7 @@
       :to="`/chatbot/${card.id}`"
       class="block border border-slate-200 bg-white transition-colors hover:border-primary"
     >
-      <div class="flex aspect-[4/3] items-center justify-center overflow-hidden bg-slate-100 text-xs tracking-widest text-slate-500">
+      <div class="flex aspect-[4/3] items-center justify-center overflow-hidden bg-slate-200 text-xs tracking-widest text-slate-600">
         <ProductThumbnail :src="card.thumbnailUrl" :alt="card.title">
           <span>NO IMAGE</span>
         </ProductThumbnail>

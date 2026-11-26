@@ -31,7 +31,8 @@
 | 用途 | クラス |
 |---|---|
 | ページ見出し h1 | `text-2xl font-bold text-slate-900`（`CommonPageHeader` を使う） |
-| セクション見出し h2 | `text-lg font-bold text-slate-900`（`CommonSectionTitle` を使う） |
+| セクション見出し h2（カードの中） | `text-lg font-bold text-slate-900`（`CommonSectionTitle` を使う） |
+| セクション見出し h2（カードを使わずページに直接並べるセクション。メインページなど） | `text-2xl font-bold text-slate-900`（`CommonSectionTitle size="lg"`） |
 | 本文 | `text-sm text-slate-700` |
 | 補足・メタ情報 | `text-xs` または `text-sm` + `text-slate-500` |
 
@@ -49,9 +50,9 @@
 | テキストボタン | `<UButton variant="ghost">` |
 | 入力欄 | `UInput` / `UTextarea`（どちらも角丸 6px・文字 `text-sm`） |
 | カード・パネル | `UCard`（`variant="outline"` が既定。白地 + slate-200 の枠） |
-| ページの幅と余白 | `CommonPageContainer`（フォーム画面は `size="narrow"`） |
+| ページの幅と余白 | `CommonPageContainer`（幅 `max-w-6xl`。フォーム画面は `size="narrow"`。セクションごとに上下の余白を持たせるページは `:padded="false"`） |
 | ページ見出し | `CommonPageHeader`（`title` / `description` / `#actions`） |
-| セクション見出し | `CommonSectionTitle` |
+| セクション見出し | `CommonSectionTitle`（`size`: md＝カードの中 / lg＝ページに直接並べるセクション） |
 | チャットの吹き出し | `CommonChatBubble`（`sender="user" \| "bot"`、`avatar` に 1 文字） |
 | 入力中の表示 | `CommonTypingIndicator` |
 
