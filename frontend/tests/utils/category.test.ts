@@ -36,6 +36,6 @@ describe('categoryTagClass', () => {
 
   it('どの色にも共通の形のクラスが付く', () => {
     expect(categoryTagClass(1)).toContain('inline-flex')
-    expect(categoryTagClass(null)).toContain('text-[11px]')
+    expect(categoryTagClass(null)).toContain('text-xs')
   })
 })

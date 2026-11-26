@@ -27,7 +27,7 @@ export function categoryIcon(categoryId: number | null | undefined): string {
   return CATEGORY_ICONS[categoryId] ?? DEFAULT_CATEGORY_ICON
 }
 
-const TAG_BASE_CLASS = 'inline-flex w-fit items-center px-2.5 py-1 text-[11px]'
+const TAG_BASE_CLASS = 'inline-flex w-fit items-center px-2.5 py-1 text-xs'
 
 // 商品カードのカテゴリタグの色。カテゴリIDの順に繰り返し割り当てる
 const TAG_VARIANT_CLASSES = [

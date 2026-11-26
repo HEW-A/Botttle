@@ -1,119 +1,108 @@
 <template>
-  <div class="bg-white font-['M_PLUS_1_Code'] text-gray-900">
-    <!-- ===== hero ===== -->
-    <section class="mx-auto max-w-6xl px-8 pb-6 pt-10" />
-
-    <!-- ===== categories ===== -->
-    <section id="categories" class="mx-auto max-w-6xl px-8 py-10">
-      <h2 class="mb-6 text-2xl font-bold">カテゴリから探す</h2>
-      <div v-if="categoriesStatus === 'pending' && categories.length === 0" class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-        <div v-for="n in 6" :key="n" class="h-[126px] animate-pulse border border-gray-200 bg-gray-100" />
-      </div>
-      <p v-else-if="categoriesError" class="border border-gray-200 px-4 py-8 text-center text-sm text-gray-500">
-        カテゴリを読み込めませんでした。時間をおいて再度お試しください。
-      </p>
-      <div v-else class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-        <!-- TODO: カテゴリで絞り込んだ商品一覧ページができたら、そこへのリンクにする -->
-        <div
-          v-for="category in categories"
-          :key="category.category_id"
-          class="flex cursor-pointer flex-col items-center gap-2.5 border border-gray-200 px-3 py-7 text-center hover:border-blue-600"
-        >
-          <svg
-            width="26"
-            height="26"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#1d4ed8"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            v-html="categoryIcon(category.category_id)"
-          />
-          <h4 class="text-sm font-semibold">{{ category.category_name }}</h4>
-          <span class="text-xs text-gray-500">{{ category.product_count.toLocaleString('ja-JP') }}点</span>
+  <div>
+    <CommonPageContainer class="flex flex-col gap-14">
+      <!-- ===== categories ===== -->
+      <section id="categories">
+        <CommonSectionTitle class="mb-5">カテゴリから探す</CommonSectionTitle>
+        <div v-if="categoriesStatus === 'pending' && categories.length === 0" class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+          <div v-for="n in 6" :key="n" class="h-[126px] animate-pulse border border-slate-200 bg-slate-100" />
         </div>
-      </div>
-    </section>
-
-    <!-- ===== featured listings ===== -->
-    <!-- 商品が新着の4件分しか無いときは、注目に出す商品が無いのでセクションごと隠す -->
-    <section v-if="showFeatured" class="mx-auto max-w-6xl px-8 py-10">
-      <div class="mb-5 flex items-baseline justify-between">
-        <h2 class="text-2xl font-bold">注目のチャットボット</h2>
-        <a href="#" class="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:underline">
-          もっと見る
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-        </a>
-      </div>
-      <ProductCardGrid :products="featuredProducts" :status="featuredStatus" :error="featuredError" />
-    </section>
-
-    <!-- ===== new arrivals ===== -->
-    <section class="mx-auto max-w-6xl px-8 py-10">
-      <div class="mb-5 flex items-baseline justify-between">
-        <h2 class="text-2xl font-bold">新着出品</h2>
-        <a href="#" class="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:underline">
-          もっと見る
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-        </a>
-      </div>
-      <ProductCardGrid :products="newProducts" :status="newStatus" :error="newError" />
-    </section>
-
-    <!-- ===== how it works ===== -->
-    <section id="how" class="mx-auto max-w-6xl px-8 py-14">
-      <h2 class="mb-8 text-center text-2xl font-bold">かんたん3ステップ</h2>
-      <div class="grid grid-cols-1 gap-8 md:grid-cols-3">
-        <div v-for="step in steps" :key="step.title" class="px-3 text-center">
+        <p v-else-if="categoriesError" class="border border-slate-200 bg-white px-4 py-8 text-center text-sm text-slate-500">
+          カテゴリを読み込めませんでした。時間をおいて再度お試しください。
+        </p>
+        <div v-else class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+          <!-- TODO: カテゴリで絞り込んだ商品一覧ページができたら、そこへのリンクにする -->
           <div
-            class="mx-auto mb-4 flex h-14 w-14 items-center justify-center border border-gray-200 text-blue-700"
+            v-for="category in categories"
+            :key="category.category_id"
+            class="flex cursor-pointer flex-col items-center gap-2.5 border border-slate-200 bg-white px-3 py-7 text-center transition-colors hover:border-primary"
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" v-html="step.icon" />
+            <svg
+              class="text-primary"
+              width="26"
+              height="26"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+              v-html="categoryIcon(category.category_id)"
+            />
+            <h3 class="text-sm font-bold text-slate-900">{{ category.category_name }}</h3>
+            <span class="text-xs text-slate-500">{{ category.product_count.toLocaleString('ja-JP') }}点</span>
           </div>
-          <h4 class="mb-2 font-semibold">{{ step.title }}</h4>
-          <p class="mx-auto max-w-[32ch] text-sm text-gray-500">{{ step.description }}</p>
         </div>
-      </div>
-    </section>
+      </section>
+
+      <!-- ===== featured listings ===== -->
+      <!-- 商品が新着の4件分しか無いときは、注目に出す商品が無いのでセクションごと隠す -->
+      <section v-if="showFeatured">
+        <div class="mb-5 flex items-baseline justify-between">
+          <CommonSectionTitle>注目のチャットボット</CommonSectionTitle>
+          <a href="#" class="inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:underline">
+            もっと見る
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </a>
+        </div>
+        <ProductCardGrid :products="featuredProducts" :status="featuredStatus" :error="featuredError" />
+      </section>
+
+      <!-- ===== new arrivals ===== -->
+      <section>
+        <div class="mb-5 flex items-baseline justify-between">
+          <CommonSectionTitle>新着出品</CommonSectionTitle>
+          <a href="#" class="inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:underline">
+            もっと見る
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </a>
+        </div>
+        <ProductCardGrid :products="newProducts" :status="newStatus" :error="newError" />
+      </section>
+
+      <!-- ===== how it works ===== -->
+      <section id="how">
+        <CommonSectionTitle class="mb-8 text-center">かんたん3ステップ</CommonSectionTitle>
+        <div class="grid grid-cols-1 gap-8 md:grid-cols-3">
+          <div v-for="step in steps" :key="step.title" class="px-3 text-center">
+            <div class="mx-auto mb-4 flex size-14 items-center justify-center border border-slate-200 bg-white text-primary">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" v-html="step.icon" />
+            </div>
+            <h3 class="mb-2 text-base font-bold text-slate-900">{{ step.title }}</h3>
+            <p class="mx-auto max-w-[32ch] text-sm text-slate-500">{{ step.description }}</p>
+          </div>
+        </div>
+      </section>
+    </CommonPageContainer>
 
     <!-- ===== trust ===== -->
-    <section class="bg-gray-100 px-8 py-9">
-      <div class="mx-auto flex max-w-6xl flex-wrap justify-between gap-6">
+    <!-- 横幅いっぱいの帯にするため、PageContainer の外に置く -->
+    <section class="border-y border-slate-200 bg-white">
+      <div class="mx-auto flex max-w-7xl flex-wrap justify-between gap-6 px-4 py-8 md:px-6">
         <div v-for="trust in trustPoints" :key="trust.text" class="flex items-center gap-3">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" v-html="trust.icon" />
-          <span class="text-sm">{{ trust.text }}</span>
+          <svg class="text-primary" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" v-html="trust.icon" />
+          <span class="text-sm text-slate-700">{{ trust.text }}</span>
         </div>
       </div>
     </section>
 
     <!-- ===== CTA ===== -->
-    <section class="mx-auto my-14 max-w-6xl px-8">
-      <div class="flex flex-col items-center gap-4 border border-gray-200 px-8 py-14 text-center">
-        <h3 class="text-xl font-bold">あなたのボットも、出品してみませんか？</h3>
-        <p class="mx-auto max-w-[48ch] text-gray-600">
+    <CommonPageContainer>
+      <UCard :ui="{ body: 'flex flex-col items-center gap-4 px-8 py-14 text-center sm:px-8 sm:py-14' }">
+        <CommonSectionTitle>あなたのボットも、出品してみませんか？</CommonSectionTitle>
+        <p class="mx-auto max-w-[48ch] text-sm text-slate-700">
           使わなくなった業務効率化ボットも、趣味で作った雑談ボットも。誰かにとって価値があるかもしれません。
         </p>
-        <button
-          type="button"
-          class="inline-flex items-center bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
-        >
-          出品をはじめる
-        </button>
-      </div>
-    </section>
+        <UButton size="lg">出品をはじめる</UButton>
+      </UCard>
+    </CommonPageContainer>
   </div>
 </template>
 
 <script setup>
 useHead({
   title: 'BOTMARKET | チャットボットCtoCマーケット',
-  link: [
-    {
-      rel: 'stylesheet',
-      href: 'https://fonts.googleapis.com/css2?family=M+PLUS+1+Code:wght@400;500;600;700&display=swap',
-    },
-  ],
 })
 
 // 商品・カテゴリはAPIから取得する(3つを並行して取得し、SSRで描画してから返す)
