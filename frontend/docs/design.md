@@ -21,10 +21,19 @@
 |---|---|---|---|
 | 入れ物 | なし | （何も書かない） | カード、パネル、バッジ、情報バー、画像 |
 | 操作する部品 | 6px | `rounded-control` | ボタン、入力欄 |
-| 会話の中身 | 22px | `rounded-bubble` | チャットの吹き出し |
+| 会話の中身 | 22px（発言者側の下の角だけ直角） | `rounded-bubble` + `rounded-br-none` / `rounded-bl-none` | チャットの吹き出し（「吹き出しピル」） |
 | 円形 | 丸 | `rounded-full` | アバター、ドット |
 
 `rounded-md` / `rounded-lg` などは 0 になる設定なので、書いても効きません（書かないでください）。
+
+### 吹き出しピル
+
+チャットの吹き出しは、1 行ならピル型（両端が半円）に見える 22px の角丸で、**発言者側の下の角だけ直角**にします。
+
+- 自分（ユーザー）の発言：右寄せ・primary の塗り・**右下**が直角
+- ボットの発言・入力中の表示：左寄せ・白地に slate-200 の枠・**左下**が直角（アイコンは吹き出しの下端にそろえる）
+
+形は `CommonChatBubble` / `CommonTypingIndicator` に入っているので、吹き出しを自前で書かずにこの 2 つを使ってください。
 
 ## 文字
 
@@ -50,11 +59,11 @@
 | テキストボタン | `<UButton variant="ghost">` |
 | 入力欄 | `UInput` / `UTextarea`（どちらも角丸 6px・文字 `text-sm`） |
 | カード・パネル | `UCard`（`variant="outline"` が既定。白地 + slate-200 の枠） |
-| ページの幅と余白 | `CommonPageContainer`（幅 `max-w-6xl`。フォーム画面は `size="narrow"`。セクションごとに上下の余白を持たせるページは `:padded="false"`） |
+| ページの幅と余白 | `CommonPageContainer`（幅 `max-w-6xl`。3 列などで横幅を広く使う画面は `size="wide"`（`max-w-7xl`）、フォーム画面は `size="narrow"`。セクションごとに上下の余白を持たせるページは `:padded="false"`） |
 | ページ見出し | `CommonPageHeader`（`title` / `description` / `#actions`） |
 | セクション見出し | `CommonSectionTitle`（`size`: md＝カードの中 / lg＝ページに直接並べるセクション） |
-| チャットの吹き出し | `CommonChatBubble`（`sender="user" \| "bot"`、`avatar` に 1 文字） |
-| 入力中の表示 | `CommonTypingIndicator` |
+| チャットの吹き出し | `CommonChatBubble`（`sender="user" \| "bot"`、`avatar` に 1 文字。形は上の「吹き出しピル」） |
+| 入力中の表示 | `CommonTypingIndicator`（`avatar` は `CommonChatBubble` と同じ） |
 
 ボタンは上の3種類（`primary` の solid / outline / ghost）を使います。無効時（`disabled`）のグレー表示はこの3種類にだけ設定しています。
 それ以外の色・variant（`color="error"` や `variant="soft"` など）は Nuxt UI 標準の「少し薄くなる」表示になるので、使う場合は無効時の見た目を確認してください。

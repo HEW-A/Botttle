@@ -1,10 +1,10 @@
 <template>
-  <section class="rounded-lg border border-slate-200 bg-white p-6">
+  <UCard as="section">
     <div class="mb-5 flex flex-wrap items-center justify-between gap-2">
-      <h2 class="text-[15px] font-bold text-slate-900">購入者レビュー</h2>
+      <CommonSectionTitle>購入者レビュー</CommonSectionTitle>
       <div class="text-sm text-slate-600">
         平均 <span class="font-bold text-slate-900">{{ averageDisplay }}</span>
-        <span class="text-xs text-slate-400">（{{ reviewCount }}件）</span>
+        <span class="text-xs text-slate-500">（{{ reviewCount }}件）</span>
       </div>
     </div>
 
@@ -14,7 +14,7 @@
 
     <form
       v-else-if="canUseReviewForm && canReview && (!hasExistingReview || isEditing)"
-      class="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4"
+      class="mb-6 border border-primary-200 bg-primary-50 p-4"
       @submit.prevent="submitReview"
     >
       <h3 class="mb-3 text-sm font-bold text-slate-900">
@@ -41,16 +41,16 @@
             role="radio"
             :aria-label="`${star}点`"
             :aria-checked="ratingInput === star"
-            class="rounded p-0.5 transition-colors focus:outline-none"
+            class="p-0.5 transition-colors focus-visible:outline-2 focus-visible:outline-primary"
             @mouseenter="hoveredRating = star"
             @focus="hoveredRating = star"
             @blur="hoveredRating = 0"
             @click="ratingInput = star"
           >
             <svg
-              class="h-8 w-8"
+              class="size-8"
+              :class="star <= (hoveredRating || Number(ratingInput)) ? 'fill-amber-500' : 'fill-slate-200'"
               viewBox="0 0 24 24"
-              :fill="star <= (hoveredRating || Number(ratingInput)) ? '#f59e0b' : '#e2e8f0'"
               aria-hidden="true"
             >
               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z" />
@@ -59,46 +59,42 @@
         </span>
       </div>
 
-      <label class="block">
+      <label class="mb-3 block">
         <span class="mb-1.5 block text-xs font-bold text-slate-700">
-          コメント<span class="ml-1 font-normal text-slate-400">（任意）</span>
+          コメント<span class="ml-1 font-normal text-slate-500">（任意）</span>
         </span>
-        <textarea
+        <UTextarea
           v-model="commentInput"
-          maxlength="1000"
-          rows="4"
+          class="w-full"
+          :ui="{ base: 'resize-y' }"
+          :maxlength="1000"
+          :rows="4"
           placeholder="このボットを使った感想を入力してください"
-          class="w-full resize-y rounded-md border border-slate-300 bg-white px-3 py-2 text-sm leading-relaxed text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline focus:outline-2 focus:outline-blue-600"
-        ></textarea>
-        <span class="mt-1 block text-right text-[11px] text-slate-400">{{ commentInput.length }}/1000</span>
+        />
+        <span class="mt-1 block text-right text-xs text-slate-500">{{ commentInput.length }}/1000</span>
       </label>
 
       <p v-if="saveError" class="mb-3 text-xs text-red-600">{{ saveError }}</p>
 
       <div class="flex flex-wrap gap-2">
-        <button
-          type="submit"
-          :disabled="!canSubmit || saving"
-          class="rounded-md bg-blue-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
-        >
+        <UButton type="submit" :disabled="!canSubmit || saving">
           {{ saving ? '保存中…' : hasExistingReview ? 'レビューを更新' : 'レビューを投稿' }}
-        </button>
-        <button
+        </UButton>
+        <UButton
           v-if="hasExistingReview"
-          type="button"
+          variant="ghost"
           :disabled="saving"
-          class="rounded-md border border-slate-300 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-400"
           @click="cancelEditing"
         >
           キャンセル
-        </button>
+        </UButton>
       </div>
     </form>
 
     <!-- 自分のレビューは GET /review の結果で出す(一覧のページに含まれていなくても表示できる) -->
     <div
       v-else-if="canUseReviewForm && canReview && myReview"
-      class="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4"
+      class="mb-6 border border-primary-200 bg-primary-50 p-4"
     >
       <div class="mb-1.5 flex flex-wrap items-center justify-between gap-2">
         <div class="flex items-center gap-2">
@@ -111,9 +107,9 @@
             <svg
               v-for="star in 5"
               :key="star"
-              class="h-4 w-4"
+              class="size-4"
+              :class="star <= myReview.rating ? 'fill-amber-500' : 'fill-slate-200'"
               viewBox="0 0 24 24"
-              :fill="star <= myReview.rating ? '#f59e0b' : '#e2e8f0'"
               aria-hidden="true"
             >
               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z" />
@@ -121,25 +117,19 @@
           </span>
         </div>
         <div class="flex items-center gap-3">
-          <time class="text-xs text-slate-400">{{ formatDate(myReview.reviewed_at) }}</time>
-          <button
-            type="button"
-            class="rounded border border-blue-200 bg-white px-2.5 py-1 text-xs font-bold text-blue-600 hover:bg-blue-50"
-            @click="startEditing"
-          >
-            レビュー変更
-          </button>
+          <time class="text-xs text-slate-500">{{ formatDate(myReview.reviewed_at) }}</time>
+          <UButton size="sm" variant="outline" @click="startEditing">レビュー変更</UButton>
         </div>
       </div>
-      <p v-if="myReview.comment" class="whitespace-pre-wrap text-[13px] leading-relaxed text-slate-600">{{ myReview.comment }}</p>
+      <p v-if="myReview.comment" class="text-sm leading-relaxed whitespace-pre-wrap text-slate-700">{{ myReview.comment }}</p>
       <p v-if="saveMessage" class="mt-2 text-xs font-bold text-green-700">{{ saveMessage }}</p>
     </div>
 
     <p v-else-if="canUseReviewForm && myReviewError" class="mb-5 text-xs text-red-600">{{ myReviewError }}</p>
-    <p v-else-if="canUseReviewForm && !canReview && !myReviewLoading" class="mb-5 rounded-md bg-slate-50 px-4 py-3 text-xs text-slate-500">
+    <p v-else-if="canUseReviewForm && !canReview && !myReviewLoading" class="mb-5 bg-slate-50 px-4 py-3 text-xs text-slate-500">
       このボットを購入したユーザーのみレビューを投稿できます。
     </p>
-    <p v-else-if="!canUseReviewForm" class="mb-5 rounded-md bg-slate-50 px-4 py-3 text-xs text-slate-500">
+    <p v-else-if="!canUseReviewForm" class="mb-5 bg-slate-50 px-4 py-3 text-xs text-slate-500">
       購入済みの方は、ログインするとレビューを投稿できます。
     </p>
 
@@ -152,11 +142,11 @@
         v-for="(review, index) in reviews"
         :key="review.username ?? index"
         class="pb-4"
-        :class="{ 'border-b border-slate-100': index < reviews.length - 1 }"
+        :class="{ 'border-b border-slate-200': index < reviews.length - 1 }"
       >
         <div class="mb-1.5 flex flex-wrap items-center justify-between gap-2">
           <div class="flex items-center gap-2">
-            <span class="text-[13px] font-bold text-slate-900">{{ review.username || '購入者' }}</span>
+            <span class="text-sm font-bold text-slate-900">{{ review.username || '購入者' }}</span>
             <span
               class="flex gap-0.5"
               role="img"
@@ -165,21 +155,21 @@
               <svg
                 v-for="star in 5"
                 :key="star"
-                class="h-4 w-4"
+                class="size-4"
+                :class="star <= review.rating ? 'fill-amber-500' : 'fill-slate-200'"
                 viewBox="0 0 24 24"
-                :fill="star <= review.rating ? '#f59e0b' : '#e2e8f0'"
                 aria-hidden="true"
               >
                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z" />
               </svg>
             </span>
           </div>
-          <time class="text-xs text-slate-400">{{ formatDate(review.reviewed_at) }}</time>
+          <time class="text-xs text-slate-500">{{ formatDate(review.reviewed_at) }}</time>
         </div>
-        <p v-if="review.comment" class="whitespace-pre-wrap text-[13px] leading-relaxed text-slate-600">{{ review.comment }}</p>
+        <p v-if="review.comment" class="text-sm leading-relaxed whitespace-pre-wrap text-slate-700">{{ review.comment }}</p>
       </article>
     </div>
-  </section>
+  </UCard>
 </template>
 
 <script setup lang="ts">

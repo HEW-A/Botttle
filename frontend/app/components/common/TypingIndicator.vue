@@ -1,4 +1,4 @@
-<!-- ボットの「入力中」表示（ピル型の中にドット 3 つ）。avatar は ChatBubble と同じ -->
+<!-- ボットの「入力中」表示（ボットの吹き出しと同じ形の中にドット 3 つ）。avatar は ChatBubble と同じ -->
 <script setup lang="ts">
 withDefaults(defineProps<{ avatar?: string }>(), {
   avatar: undefined,
@@ -6,7 +6,7 @@ withDefaults(defineProps<{ avatar?: string }>(), {
 </script>
 
 <template>
-  <div class="flex items-center gap-2" role="status" aria-label="入力中">
+  <div class="flex items-end gap-2" role="status" aria-label="入力中">
     <span
       v-if="avatar"
       aria-hidden="true"
@@ -14,7 +14,7 @@ withDefaults(defineProps<{ avatar?: string }>(), {
     >
       {{ avatar }}
     </span>
-    <span class="flex items-center gap-1.5 rounded-bubble border border-slate-200 bg-white px-4 py-3" aria-hidden="true">
+    <span class="flex items-center gap-1.5 rounded-bubble rounded-bl-none border border-slate-200 bg-white px-4 py-3" aria-hidden="true">
       <span class="typing-dot size-1.5 rounded-full bg-slate-500" />
       <span class="typing-dot size-1.5 rounded-full bg-slate-500 [animation-delay:200ms]" />
       <span class="typing-dot size-1.5 rounded-full bg-slate-500 [animation-delay:400ms]" />
