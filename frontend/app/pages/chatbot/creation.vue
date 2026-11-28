@@ -1,109 +1,114 @@
 <template>
-  <div class="flex min-h-screen flex-col bg-slate-50 font-['M_PLUS_1_Code']">
-    <CommonAppHeader />
+  <CommonPageContainer size="narrow">
+    <CommonPageHeader title="チャットボットを作成" description="PDFファイルをアップロードすると、その内容をもとにチャットボットを作成します。" />
 
-    <main class="flex-1">
-      <div class="mx-auto flex w-full max-w-[640px] flex-col gap-9 px-6 py-14">
-        <div class="flex flex-col gap-1.5">
-          <h1 class="text-2xl font-bold text-slate-900">チャットボットを作成</h1>
-          <p class="text-sm leading-relaxed text-slate-500">
-            PDFファイルをアップロードすると、その内容をもとにチャットボットを作成します。
-          </p>
+    <div class="mb-9 flex flex-col gap-2.5">
+      <!-- クリックでもキーボード(Enter/Space)でもファイルを選べるよう button にしている -->
+      <button
+        type="button"
+        class="flex min-h-38 w-full cursor-pointer flex-col items-center justify-center gap-2.5 border-2 border-dashed transition-colors focus-visible:outline-2 focus-visible:outline-primary"
+        :class="dragOver ? 'border-primary bg-primary-50' : 'border-slate-300 bg-white hover:border-primary'"
+        @click="openPicker"
+        @drop.prevent="handleDrop"
+        @dragover.prevent="dragOver = true"
+        @dragleave="dragOver = false"
+      >
+        <svg class="text-primary" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 3v12"></path>
+          <path d="M7 8l5-5 5 5"></path>
+          <path d="M4 17v3a2 2 0 002 2h12a2 2 0 002-2v-3"></path>
+        </svg>
+        <span class="text-base font-bold text-slate-900">PDFをアップロード</span>
+        <span class="text-xs text-slate-500">またはドラッグ&amp;ドロップ</span>
+      </button>
+      <input
+        ref="fileInputRef"
+        type="file"
+        multiple
+        accept=".pdf,application/pdf"
+        class="hidden"
+        @change="handleFileChange"
+      />
+
+      <div
+        v-for="(file, index) in displayFiles"
+        :key="`${file.name}-${index}`"
+        class="flex items-center justify-between gap-2 border border-slate-200 bg-white py-1.5 pr-1.5 pl-3.5"
+      >
+        <div class="flex min-w-0 items-center gap-2.5">
+          <span class="flex-none border border-primary px-1.5 py-0.5 text-xs font-bold tracking-wide text-primary">{{ file.ext }}</span>
+          <span class="truncate text-sm text-slate-900">{{ file.name }}</span>
+          <span class="flex-none text-xs text-slate-500">{{ file.sizeLabel }}</span>
         </div>
-
-        <div class="flex flex-col gap-2.5">
-          <div
-            class="flex min-h-[150px] cursor-pointer flex-col items-center justify-center gap-2.5 border-2 transition-colors"
-            :class="dragOver ? 'border-blue-600 bg-blue-50' : 'border-slate-900 bg-white'"
-            @click="openPicker"
-            @drop.prevent="handleDrop"
-            @dragover.prevent="dragOver = true"
-            @dragleave="dragOver = false"
-          >
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 3v12"></path>
-              <path d="M7 8l5-5 5 5"></path>
-              <path d="M4 17v3a2 2 0 002 2h12a2 2 0 002-2v-3"></path>
-            </svg>
-            <span class="text-[15px] font-bold text-slate-900">PDFをアップロード</span>
-            <span class="text-xs text-slate-400">またはドラッグ&amp;ドロップ</span>
-            <input
-              ref="fileInputRef"
-              type="file"
-              multiple
-              accept=".pdf,application/pdf"
-              class="hidden"
-              @change="handleFileChange"
-            />
-          </div>
-
-          <div
-            v-for="(file, index) in displayFiles"
-            :key="`${file.name}-${index}`"
-            class="flex items-center justify-between border border-slate-200 bg-white px-3.5 py-3"
-          >
-            <div class="flex min-w-0 items-center gap-2.5">
-              <span class="flex-none border border-blue-600 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-blue-600">{{ file.ext }}</span>
-              <span class="truncate text-[13px] text-slate-900">{{ file.name }}</span>
-              <span class="flex-none text-xs text-slate-400">{{ file.sizeLabel }}</span>
-            </div>
-            <button type="button" class="flex-none px-1 text-lg leading-none text-slate-400" @click="removeFile(index)">&times;</button>
-          </div>
-
-          <p v-if="createError" class="text-sm font-semibold text-red-600" role="alert">
-            {{ createError }}
-          </p>
-        </div>
-
-        <button
-          type="button"
-          class="w-full border-2 border-transparent py-4 text-[15px] font-bold"
-          :class="canCreate ? 'cursor-pointer bg-blue-600 text-white' : 'cursor-not-allowed bg-slate-200 text-slate-400'"
-          :disabled="!canCreate"
-          @click="createBot"
-        >
-          チャットボットを作成する
-        </button>
-      </div>
-    </main>
-
-    <CommonAppFooter />
-
-    <div v-if="stage === 'creating'" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60">
-      <div class="flex flex-col items-center gap-4 border-2 border-slate-900 bg-white px-12 py-10">
-        <div class="h-[34px] w-[34px] animate-spin rounded-full border-4 border-slate-200 border-t-blue-600"></div>
-        <span class="text-[15px] font-semibold text-slate-900">チャットボットを作成しています...</span>
-        <span class="text-xs text-slate-400">しばらくお待ちください</span>
-      </div>
-    </div>
-
-    <div v-if="stage === 'created'" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-6">
-      <div class="flex w-full max-w-[400px] flex-col items-center gap-[18px] border-2 border-slate-900 bg-white px-10 py-11">
-        <div class="flex h-[52px] w-[52px] items-center justify-center rounded-full border-2 border-blue-600">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20 6L9 17l-5-5"></path>
+        <UButton color="neutral" variant="ghost" size="sm" square class="flex-none" :aria-label="`${file.name}を取り除く`" @click="removeFile(index)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <path d="M18 6L6 18M6 6l12 12" />
           </svg>
-        </div>
-        <div class="flex flex-col items-center gap-1.5 text-center">
-          <h2 class="text-[19px] font-bold text-slate-900">チャットボットが完成しました</h2>
-          <p class="text-[13px] leading-relaxed text-slate-500">作成したチャットボットを出品するか、動作をテストできます。</p>
-          <p v-if="creationWarning" class="text-[12px] font-semibold leading-relaxed text-amber-700" role="alert">
-            {{ creationWarning }}
-          </p>
-        </div>
-        <div class="mt-1.5 flex w-full gap-2.5">
-          <button type="button" class="flex-1 border-2 border-slate-700 bg-white py-3 text-sm font-bold text-slate-700" @click="goToTest">テストする</button>
-          <button type="button" class="flex-1 border-2 border-blue-600 bg-blue-600 py-3 text-sm font-bold text-white" @click="goToListing">出品する</button>
-        </div>
-        <button type="button" class="mt-0.5 p-1 text-xs text-slate-400" @click="closeModal">閉じる</button>
+        </UButton>
       </div>
+
+      <p v-if="createError" class="text-sm font-bold text-red-600" role="alert">
+        {{ createError }}
+      </p>
     </div>
-  </div>
+
+    <UButton block size="lg" :disabled="!canCreate" @click="createBot">チャットボットを作成する</UButton>
+
+    <!-- 作成中(閉じられない) -->
+    <UModal
+      :open="stage === 'creating'"
+      title="チャットボットを作成しています"
+      :dismissible="false"
+      :close="false"
+      :ui="{ content: 'sm:max-w-sm' }"
+    >
+      <template #content>
+        <div class="flex flex-col items-center gap-4 px-12 py-10" role="status">
+          <div class="size-9 animate-spin rounded-full border-4 border-slate-200 border-t-primary" aria-hidden="true"></div>
+          <span class="text-base font-bold text-slate-900">チャットボットを作成しています...</span>
+          <span class="text-xs text-slate-500">しばらくお待ちください</span>
+        </div>
+      </template>
+    </UModal>
+
+    <!-- 作成完了(閉じると最初の状態に戻る) -->
+    <UModal
+      :open="stage === 'created'"
+      title="チャットボットが完成しました"
+      :ui="{ content: 'sm:max-w-md' }"
+      @update:open="(open) => { if (!open) closeModal() }"
+    >
+      <template #content>
+        <div class="relative flex flex-col items-center gap-4 px-10 py-11">
+          <UButton color="neutral" variant="ghost" size="sm" square aria-label="閉じる" class="absolute top-3 right-3" @click="closeModal">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </UButton>
+          <div class="flex size-13 items-center justify-center rounded-full border-2 border-primary text-primary">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20 6L9 17l-5-5"></path>
+            </svg>
+          </div>
+          <div class="flex flex-col items-center gap-1.5 text-center">
+            <p class="text-xl font-bold text-slate-900" aria-hidden="true">チャットボットが完成しました</p>
+            <p class="text-sm leading-relaxed text-slate-500">作成したチャットボットを出品するか、動作をテストできます。</p>
+            <p v-if="creationWarning" class="text-xs leading-relaxed font-bold text-amber-700" role="alert">
+              {{ creationWarning }}
+            </p>
+          </div>
+          <div class="mt-1.5 flex w-full gap-2.5">
+            <UButton variant="outline" class="flex-1 justify-center" @click="goToTest">テストする</UButton>
+            <UButton class="flex-1 justify-center" @click="goToListing">出品する</UButton>
+          </div>
+        </div>
+      </template>
+    </UModal>
+  </CommonPageContainer>
 </template>
 
 <script setup>
 definePageMeta({
-  layout: false,
   middleware: 'auth',
 })
 
@@ -112,12 +117,6 @@ const config = useRuntimeConfig()
 
 useHead({
   title: 'チャットボットを作成 | botttle',
-  link: [
-    {
-      rel: 'stylesheet',
-      href: 'https://fonts.googleapis.com/css2?family=M+PLUS+1+Code:wght@400;500;600;700&display=swap',
-    },
-  ],
 })
 
 const fileInputRef = ref(null)
