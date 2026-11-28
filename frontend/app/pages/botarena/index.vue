@@ -1,299 +1,224 @@
 <template>
-  <div class="font-['M_PLUS_1_Code']">
-    <div class="mx-auto max-w-[1080px] px-6 pt-10 pb-16">
-      <!-- ============ モード選択 ============ -->
-      <template v-if="step === 'mode'">
-        <div class="mb-8 text-center">
-          <h1 class="mb-2.5 text-[28px] font-bold text-slate-800">対戦方法を選ぶ</h1>
-          <p class="text-sm leading-relaxed text-slate-500">
-            2体のボットに同じ質問を送り、良い回答をした方に投票します。
-          </p>
-        </div>
-        <div class="mx-auto grid max-w-[760px] grid-cols-1 gap-5 sm:grid-cols-2">
-          <button
-            type="button"
-            class="flex cursor-pointer flex-col gap-3 rounded-[14px] border border-slate-200 bg-white p-7 text-left hover:border-blue-600"
-            @click="goRandom"
-          >
-            <span class="text-sm font-semibold text-blue-600">匿名の2つを戦わせる</span>
-            <span class="text-[22px] font-bold text-slate-800">{{ MODE_LABELS.random }}</span>
-            <span class="text-[13px] leading-relaxed text-slate-500">
-              出品中のボットから2体をランダムに選出。名前は投票後に公開されます。勝敗はランキングに影響します。
-            </span>
-            <span class="mt-2 self-start rounded-lg bg-blue-600 px-5 py-2.5 text-[13px] font-bold text-white">
-              すぐに対戦する
-            </span>
-          </button>
-          <button
-            type="button"
-            class="flex cursor-pointer flex-col gap-3 rounded-[14px] border border-slate-200 bg-white p-7 text-left hover:border-slate-700"
-            @click="goPick"
-          >
-            <span class="text-sm font-semibold text-slate-700">指名した2つを戦わせる</span>
-            <span class="text-[22px] font-bold text-slate-800">{{ MODE_LABELS.pick }}</span>
-            <span class="text-[13px] leading-relaxed text-slate-500">
-              検索・お気に入り・カテゴリからAとBのボットを自分で指定して比較します。この対戦はランキングに影響しません。
-            </span>
-            <span class="mt-2 self-start rounded-lg bg-slate-700 px-5 py-2.5 text-[13px] font-bold text-white">
-              ボットを選ぶ
-            </span>
-          </button>
-        </div>
-      </template>
+  <CommonPageContainer>
+    <!-- ============ モード選択 ============ -->
+    <template v-if="step === 'mode'">
+      <div class="mb-8 text-center">
+        <h1 class="mb-2.5 text-2xl font-bold text-slate-900">対戦方法を選ぶ</h1>
+        <p class="text-sm leading-relaxed text-slate-500">
+          2体のボットに同じ質問を送り、良い回答をした方に投票します。
+        </p>
+      </div>
+      <div class="mx-auto grid max-w-3xl grid-cols-1 gap-5 sm:grid-cols-2">
+        <!-- カード全体が1つのボタン。中の「すぐに対戦する」等はボタン風の見た目だけ(ボタンの入れ子はできないため) -->
+        <button
+          type="button"
+          class="flex cursor-pointer flex-col gap-3 border border-slate-200 bg-white p-7 text-left transition-colors hover:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+          @click="goRandom"
+        >
+          <span class="text-sm font-bold text-primary">匿名の2つを戦わせる</span>
+          <span class="text-xl font-bold text-slate-900">{{ MODE_LABELS.random }}</span>
+          <span class="text-sm leading-relaxed text-slate-500">
+            出品中のボットから2体をランダムに選出。名前は投票後に公開されます。勝敗はランキングに影響します。
+          </span>
+          <span class="mt-2 inline-flex h-11 items-center self-start rounded-control bg-primary px-5 text-sm font-bold text-white">
+            すぐに対戦する
+          </span>
+        </button>
+        <button
+          type="button"
+          class="flex cursor-pointer flex-col gap-3 border border-slate-200 bg-white p-7 text-left transition-colors hover:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+          @click="goPick"
+        >
+          <span class="text-sm font-bold text-slate-700">指名した2つを戦わせる</span>
+          <span class="text-xl font-bold text-slate-900">{{ MODE_LABELS.pick }}</span>
+          <span class="text-sm leading-relaxed text-slate-500">
+            検索・お気に入り・カテゴリからAとBのボットを自分で指定して比較します。この対戦はランキングに影響しません。
+          </span>
+          <span class="mt-2 inline-flex h-11 items-center self-start rounded-control bg-white px-5 text-sm font-bold text-primary ring ring-primary ring-inset">
+            ボットを選ぶ
+          </span>
+        </button>
+      </div>
+    </template>
 
-      <!-- ============ ボット選択 ============ -->
-      <template v-else-if="step === 'pick'">
-        <div class="mb-6 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h1 class="mb-1.5 text-2xl font-bold text-slate-800">対戦するボットを選ぶ</h1>
-            <p class="text-[13px] text-slate-500">AとBそれぞれに1体ずつ選択してください</p>
-          </div>
-          <button
-            type="button"
-            class="shrink-0 rounded-lg border border-slate-300 bg-white px-4 py-2 text-[13px] font-semibold whitespace-nowrap text-slate-700 hover:bg-slate-100"
-            @click="backToMode"
-          >
-            戻る
-          </button>
-        </div>
+    <!-- ============ ボット選択 ============ -->
+    <template v-else-if="step === 'pick'">
+      <CommonPageHeader title="対戦するボットを選ぶ" description="AとBそれぞれに1体ずつ選択してください">
+        <template #actions>
+          <UButton variant="outline" @click="backToMode">戻る</UButton>
+        </template>
+      </CommonPageHeader>
 
-        <div class="mb-7 grid grid-cols-1 gap-5 md:grid-cols-2">
-          <div
-            v-for="side in sideViews"
-            :key="side.key"
-            class="flex flex-col gap-3.5 rounded-[14px] border border-slate-200 bg-white p-5"
-          >
-            <div class="flex items-center justify-between gap-2.5">
-              <div class="flex items-center gap-2.5">
-                <div
-                  class="flex h-9 w-9 items-center justify-center rounded-full bg-slate-700 text-base font-bold text-white"
-                >
-                  {{ side.key }}
-                </div>
-                <span class="text-base font-bold text-slate-800">ボット {{ side.key }}</span>
+      <div class="mb-7 grid grid-cols-1 gap-5 md:grid-cols-2">
+        <UCard v-for="side in sideViews" :key="side.key" :ui="{ body: 'flex flex-col gap-3.5 p-5 sm:p-5' }">
+          <div class="flex items-center justify-between gap-2.5">
+            <div class="flex items-center gap-2.5">
+              <div class="flex size-9 items-center justify-center rounded-full bg-primary-100 text-base font-bold text-primary-700" aria-hidden="true">
+                {{ side.key }}
               </div>
-              <span
-                v-if="side.state.selected"
-                class="max-w-[180px] truncate rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-600"
-              >
-                {{ side.state.selected.name }}
-              </span>
+              <CommonSectionTitle>ボット {{ side.key }}</CommonSectionTitle>
             </div>
-
-            <input
-              v-model="side.state.query"
-              type="text"
-              placeholder="ボット名・出品者で検索"
-              class="rounded-lg border border-slate-300 bg-white px-3.5 py-[11px] text-[13px] text-slate-800 focus:border-blue-600 focus:outline focus:outline-2 focus:outline-offset-1 focus:outline-blue-600"
-            />
-
-            <div class="grid grid-cols-2 gap-2.5">
-              <button
-                type="button"
-                class="rounded-lg border p-2.5 text-[13px] font-semibold"
-                :class="toggleClass(side.state.favOnly)"
-                @click="side.state.favOnly = !side.state.favOnly"
-              >
-                お気に入りから選択
-              </button>
-              <button
-                type="button"
-                class="rounded-lg border p-2.5 text-[13px] font-semibold"
-                :class="toggleClass(side.state.showCats || !!side.state.cat)"
-                @click="toggleCats(side.state)"
-              >
-                カテゴリから検索
-              </button>
-            </div>
-
-            <div v-if="side.state.showCats" class="flex flex-wrap gap-1.5">
-              <button
-                v-for="c in CATEGORIES"
-                :key="c"
-                type="button"
-                class="shrink-0 rounded-full border px-3 py-[5px] text-xs font-medium whitespace-nowrap"
-                :class="
-                  side.state.cat === c
-                    ? 'border-blue-600 bg-blue-600 text-white'
-                    : 'border-slate-300 bg-white text-slate-700'
-                "
-                @click="side.state.cat = side.state.cat === c ? null : c"
-              >
-                {{ c }}
-              </button>
-            </div>
-
-            <div class="flex h-[300px] flex-col gap-1.5 overflow-y-auto pr-0.5">
-              <button
-                v-for="bot in side.results"
-                :key="bot.id"
-                type="button"
-                :disabled="bot.taken"
-                class="flex items-center gap-3 rounded-[10px] border px-3 py-2.5 text-left hover:border-blue-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-slate-200"
-                :class="bot.selected ? 'border-blue-600 bg-blue-50' : 'border-slate-200 bg-white'"
-                @click="side.state.selected = bot.selected ? null : bot"
-              >
-                <div
-                  class="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full bg-slate-700 text-[13px] font-bold text-white"
-                >
-                  {{ bot.avatar }}
-                </div>
-                <div class="min-w-0 flex-1">
-                  <div class="truncate text-[13px] font-bold text-slate-800">{{ bot.name }}</div>
-                  <div class="text-[11px] text-slate-400">{{ bot.owner }} ・ {{ bot.category }}</div>
-                </div>
-                <span v-if="bot.fav" class="shrink-0 text-[11px] text-amber-500">★</span>
-              </button>
-              <p v-if="!side.results.length" class="my-6 text-center text-[13px] text-slate-400">
-                該当するボットがありません
-              </p>
-            </div>
+            <span v-if="side.state.selected" class="max-w-44 truncate bg-primary-50 px-2.5 py-1 text-xs font-bold text-primary-700">
+              {{ side.state.selected.name }}
+            </span>
           </div>
-        </div>
 
-        <div class="flex justify-center">
-          <button
-            type="button"
-            :disabled="!canStart"
-            class="rounded-[10px] px-10 py-3.5 text-[15px] font-bold text-white"
-            :class="canStart ? 'bg-blue-600 hover:bg-blue-700' : 'cursor-not-allowed bg-slate-400'"
-            @click="startPicked"
-          >
-            BCを100払って対戦
-          </button>
-        </div>
-      </template>
+          <UInput
+            v-model="side.state.query"
+            class="w-full"
+            placeholder="ボット名・出品者で検索"
+            :aria-label="`ボット ${side.key} を検索`"
+          />
 
-      <!-- ============ アリーナ ============ -->
-      <template v-else>
-        <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <h1 class="mb-1 text-xl font-bold text-slate-800">
-              アリーナ ・ {{ MODE_LABELS[mode] }}
-            </h1>
-            <p class="text-[13px] text-slate-500">
-              {{
-                mode === 'random' ? 'ボットの正体は投票後に公開されます' : '同じ質問を両方のボットに送って比較しましょう'
-              }}
+          <div class="grid grid-cols-2 gap-2.5">
+            <UButton
+              :variant="side.state.favOnly ? 'solid' : 'outline'"
+              class="justify-center"
+              :aria-pressed="side.state.favOnly"
+              @click="side.state.favOnly = !side.state.favOnly"
+            >
+              お気に入りから選択
+            </UButton>
+            <UButton
+              :variant="side.state.showCats || !!side.state.cat ? 'solid' : 'outline'"
+              class="justify-center"
+              :aria-pressed="side.state.showCats || !!side.state.cat"
+              @click="toggleCats(side.state)"
+            >
+              カテゴリから検索
+            </UButton>
+          </div>
+
+          <div v-if="side.state.showCats" class="flex flex-wrap gap-1.5">
+            <UButton
+              v-for="c in CATEGORIES"
+              :key="c"
+              size="sm"
+              :variant="side.state.cat === c ? 'solid' : 'outline'"
+              :aria-pressed="side.state.cat === c"
+              @click="side.state.cat = side.state.cat === c ? null : c"
+            >
+              {{ c }}
+            </UButton>
+          </div>
+
+          <div class="flex h-75 flex-col gap-1.5 overflow-y-auto pr-0.5">
+            <button
+              v-for="bot in side.results"
+              :key="bot.id"
+              type="button"
+              :disabled="bot.taken"
+              :aria-pressed="bot.selected"
+              class="flex items-center gap-3 border px-3 py-2.5 text-left transition-colors hover:border-primary focus-visible:outline-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-slate-200"
+              :class="bot.selected ? 'border-primary bg-primary-50' : 'border-slate-200 bg-white'"
+              @click="side.state.selected = bot.selected ? null : bot"
+            >
+              <div class="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-bold text-primary-700" aria-hidden="true">
+                {{ bot.avatar }}
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="truncate text-sm font-bold text-slate-900">{{ bot.name }}</div>
+                <div class="text-xs text-slate-500">{{ bot.owner }} ・ {{ bot.category }}</div>
+              </div>
+              <span v-if="bot.fav" class="shrink-0 text-xs text-amber-500">
+                <span aria-hidden="true">★</span>
+                <span class="sr-only">お気に入り</span>
+              </span>
+            </button>
+            <p v-if="!side.results.length" class="my-6 text-center text-sm text-slate-500">
+              該当するボットがありません
             </p>
           </div>
-          <button
-            type="button"
-            class="shrink-0 rounded-lg border border-slate-300 bg-white px-4 py-2 text-[13px] font-semibold whitespace-nowrap text-slate-700 hover:bg-slate-100"
-            @click="backToMode"
-          >
-            対戦をやめる
-          </button>
-        </div>
+        </UCard>
+      </div>
 
-        <div v-if="promptLog.length" class="mb-4 flex flex-col gap-1.5">
-          <div
-            v-for="(p, i) in promptLog"
-            :key="i"
-            class="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-[13px] text-blue-700"
-          >
-            Q. {{ p.text }}
-          </div>
-        </div>
+      <div class="flex justify-center">
+        <UButton size="lg" class="px-10" :disabled="!canStart" @click="startPicked">BCを100払って対戦</UButton>
+      </div>
+    </template>
 
-        <div class="mb-5 grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div
-            v-for="pn in panels"
-            :key="pn.key"
-            class="flex h-[420px] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white"
-          >
-            <div class="flex items-center gap-2.5 border-b border-slate-200 px-4 py-3.5">
-              <div
-                class="flex h-[34px] w-[34px] flex-none items-center justify-center rounded-full text-[13px] font-bold text-white"
-                :class="pn.anon ? 'bg-slate-700' : 'bg-blue-600'"
-              >
-                {{ pn.avatar }}
-              </div>
-              <div class="min-w-0">
-                <div class="text-[13px] font-bold text-slate-800">{{ pn.name }}</div>
-                <div class="text-[11px] text-slate-400">{{ pn.owner }}</div>
-              </div>
+    <!-- ============ アリーナ ============ -->
+    <template v-else>
+      <CommonPageHeader
+        :title="`アリーナ ・ ${MODE_LABELS[mode]}`"
+        :description="mode === 'random' ? 'ボットの正体は投票後に公開されます' : '同じ質問を両方のボットに送って比較しましょう'"
+      >
+        <template #actions>
+          <UButton variant="outline" @click="backToMode">対戦をやめる</UButton>
+        </template>
+      </CommonPageHeader>
+
+      <div v-if="promptLog.length" class="mb-4 flex flex-col gap-1.5">
+        <div v-for="(p, i) in promptLog" :key="i" class="border border-primary-200 bg-primary-50 px-3 py-2 text-sm text-primary-800">
+          Q. {{ p.text }}
+        </div>
+      </div>
+
+      <div class="mb-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+        <UCard
+          v-for="pn in panels"
+          :key="pn.key"
+          as="section"
+          class="flex h-105 flex-col"
+          :ui="{
+            header: 'flex items-center gap-2.5 px-4 py-3.5 sm:px-4',
+            body: 'flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto bg-slate-50 p-4 sm:p-4',
+          }"
+        >
+          <template #header>
+            <div
+              class="flex size-9 flex-none items-center justify-center rounded-full text-sm font-bold"
+              :class="pn.anon ? 'bg-slate-200 text-slate-700' : 'bg-primary-100 text-primary-700'"
+              aria-hidden="true"
+            >
+              {{ pn.avatar }}
             </div>
-            <div class="flex flex-1 flex-col gap-2.5 overflow-y-auto p-4">
-              <template v-for="(msg, i) in pn.messages" :key="i">
-                <div
-                  v-if="msg.isText"
-                  class="max-w-[90%] rounded-[10px] bg-slate-100 px-3 py-2.5 text-[13px] leading-relaxed text-slate-800"
-                >
-                  {{ msg.text }}
-                </div>
-                <div v-else class="inline-flex w-fit gap-1 rounded-[10px] bg-slate-100 px-3.5 py-2.5">
-                  <span class="ba-dot h-1.5 w-1.5 rounded-full bg-slate-400" style="animation-delay: 0ms"></span>
-                  <span class="ba-dot h-1.5 w-1.5 rounded-full bg-slate-400" style="animation-delay: 200ms"></span>
-                  <span class="ba-dot h-1.5 w-1.5 rounded-full bg-slate-400" style="animation-delay: 400ms"></span>
-                </div>
-              </template>
+            <div class="min-w-0">
+              <h2 class="text-sm font-bold text-slate-900">{{ pn.name }}</h2>
+              <div class="text-xs text-slate-500">{{ pn.owner }}</div>
             </div>
-          </div>
-        </div>
+          </template>
 
-        <div class="mb-5 flex gap-2.5">
-          <input
-            v-model="input"
-            type="text"
-            :disabled="sending"
-            placeholder="両方のボットに送る質問を入力…"
-            class="min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3.5 py-3 text-[13px] text-slate-800 focus:border-blue-600 focus:outline focus:outline-2 focus:outline-offset-1 focus:outline-blue-600"
-            @keydown.enter="onEnter"
-          />
-          <button
-            type="button"
-            :disabled="sendDisabled"
-            class="rounded-lg px-[22px] py-3 text-[13px] font-bold text-white"
-            :class="sendDisabled ? 'cursor-not-allowed bg-slate-400' : 'bg-blue-600 hover:bg-blue-700'"
-            @click="sendPrompt"
-          >
-            {{ sending ? '送信中…' : '送信' }}
-          </button>
-        </div>
+          <template v-for="(msg, i) in pn.messages" :key="i">
+            <CommonChatBubble v-if="msg.isText" sender="bot">{{ msg.text }}</CommonChatBubble>
+            <CommonTypingIndicator v-else />
+          </template>
+        </UCard>
+      </div>
 
-        <p v-if="showVoteHint" class="mb-6 text-center text-xs text-slate-400">
-          あと{{ exchangesLeft }}回のやり取りで投票が可能になります
-        </p>
+      <!-- form にして Enter で送信する(日本語の変換確定の Enter では送信されない) -->
+      <form class="mb-5 flex gap-2.5" @submit.prevent="sendPrompt">
+        <UInput
+          v-model="input"
+          class="min-w-0 flex-1"
+          :disabled="sending"
+          placeholder="両方のボットに送る質問を入力…"
+          aria-label="両方のボットに送る質問"
+        />
+        <UButton type="submit" :disabled="sendDisabled">{{ sending ? '送信中…' : '送信' }}</UButton>
+      </form>
 
-        <div v-if="showVotePanel" class="mb-5 rounded-xl border border-slate-200 bg-white p-5">
-          <h3 class="mb-3.5 text-center text-sm font-bold text-slate-800">どちらの回答が良かった？</h3>
-          <div class="flex flex-wrap justify-center gap-2.5">
-            <button
-              v-for="v in VOTE_DEFS"
-              :key="v.key"
-              type="button"
-              class="rounded-full border border-slate-300 bg-white px-5 py-2.5 text-[13px] font-semibold text-slate-700 hover:border-blue-600 hover:bg-blue-600 hover:text-white"
-              @click="vote(v.key)"
-            >
-              {{ v.label }}
-            </button>
-          </div>
-        </div>
+      <p v-if="showVoteHint" class="mb-6 text-center text-xs text-slate-500">
+        あと{{ exchangesLeft }}回のやり取りで投票が可能になります
+      </p>
 
-        <div v-if="voted" class="rounded-xl border border-blue-200 bg-blue-50 p-[22px] text-center">
-          <p class="mb-1.5 text-[13px] font-bold text-blue-700">投票ありがとうございます</p>
-          <p class="mb-[18px] text-[13px] text-slate-700">{{ resultText }}</p>
-          <div class="flex flex-wrap justify-center gap-3">
-            <button
-              type="button"
-              class="rounded-lg bg-blue-600 px-[22px] py-2.5 text-[13px] font-bold text-white hover:bg-blue-700"
-              @click="rematch"
-            >
-              もう一度対戦する
-            </button>
-            <button
-              type="button"
-              class="rounded-lg border border-slate-300 bg-white px-[22px] py-2.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-100"
-              @click="backToMode"
-            >
-              モード選択へ
-            </button>
-          </div>
+      <UCard v-if="showVotePanel" class="mb-5" :ui="{ body: 'p-5 sm:p-5' }">
+        <CommonSectionTitle class="mb-3.5 text-center">どちらの回答が良かった？</CommonSectionTitle>
+        <div class="flex flex-wrap justify-center gap-2.5">
+          <UButton v-for="v in VOTE_DEFS" :key="v.key" variant="outline" @click="vote(v.key)">{{ v.label }}</UButton>
         </div>
-      </template>
-    </div>
-  </div>
+      </UCard>
+
+      <div v-if="voted" class="border border-primary-200 bg-primary-50 p-6 text-center">
+        <p class="mb-1.5 text-sm font-bold text-primary-700">投票ありがとうございます</p>
+        <p class="mb-4 text-sm text-slate-700">{{ resultText }}</p>
+        <div class="flex flex-wrap justify-center gap-3">
+          <UButton @click="rematch">もう一度対戦する</UButton>
+          <UButton variant="outline" @click="backToMode">モード選択へ</UButton>
+        </div>
+      </div>
+    </template>
+  </CommonPageContainer>
 </template>
 
 <script setup>
@@ -304,12 +229,6 @@
 
 useHead({
   title: 'BotArena | botttle',
-  link: [
-    {
-      rel: 'stylesheet',
-      href: 'https://fonts.googleapis.com/css2?family=M+PLUS+1+Code:wght@400;500;600;700&display=swap',
-    },
-  ],
 })
 
 // 対戦モードの表示名。モード選択カードとアリーナ見出しで共通して使う
@@ -413,10 +332,6 @@ const sideViews = computed(() => [
 
 const canStart = computed(() => !!(sideA.value.selected && sideB.value.selected))
 
-function toggleClass(active) {
-  return active ? 'border-slate-700 bg-slate-700 text-white' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
-}
-
 function toggleCats(side) {
   if (side.showCats) {
     side.showCats = false
@@ -501,12 +416,6 @@ const resultText = computed(() => {
   return `どちらも微妙として記録しました。${names}`
 })
 
-function onEnter(e) {
-  // IME変換確定のEnterでは送信しない
-  if (e.isComposing) return
-  sendPrompt()
-}
-
 function sendPrompt() {
   const text = input.value.trim()
   if (!text || sending.value) return
@@ -543,19 +452,3 @@ function vote(choice) {
   voted.value = choice
 }
 </script>
-
-<style scoped>
-@keyframes ba-blink {
-  0%,
-  80%,
-  100% {
-    opacity: 0.25;
-  }
-  40% {
-    opacity: 1;
-  }
-}
-.ba-dot {
-  animation: ba-blink 1.2s infinite;
-}
-</style>
