@@ -15,6 +15,7 @@ except ImportError:
 
 from common.supabase_client import supabase
 from common.auth_helper import get_current_user
+from rag.service import ingest_pdf_safely
 
 bot_creation_bp = Blueprint("bot_creation", __name__)
 
