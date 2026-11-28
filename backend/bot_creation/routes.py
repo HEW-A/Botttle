@@ -94,8 +94,13 @@ def _upload_single_pdf(chatbot_id: str, file) -> dict:
         "extracted_text": extracted_text,
     }).execute()
 
+    pdf_id = result.data[0]["pdf_id"]
+
+    # RAG用にチャンク化して保存する。失敗してもアップロード自体は成功として扱う
+    ingest_pdf_safely(chatbot_id, pdf_id, file_bytes, file.filename)
+
     return {
-        "pdf_id": result.data[0]["pdf_id"],
+        "pdf_id": pdf_id,
         "file_name": file.filename,
     }
 
