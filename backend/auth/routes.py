@@ -3,7 +3,7 @@ import os
 
 from flask import Blueprint, request, jsonify
 
-from common.supabase_client import supabase
+from common.supabase_client import create_auth_client, supabase
 
 from common.auth_helper import get_current_user
 
@@ -71,7 +71,8 @@ def signup():
     auth_email = email or f"{user_id}@{DUMMY_EMAIL_DOMAIN}"
 
     try:
-        result = supabase.auth.sign_up({
+        # 共有クライアントのセッションを汚さないよう、使い捨てのクライアントで登録する
+        result = create_auth_client().auth.sign_up({
             "email": auth_email,
             "password": password,
         })
@@ -116,8 +117,7 @@ def login():
     if not user_row:
         return jsonify({"error": "ユーザーIDまたはパスワードが正しくありません"}), 401
 
-    # 既にログイン中の場合、共有のSupabaseクライアントで再度sign_inすると内部セッション状態が
-    # 衝突してエラーになるため、事前にCookieの既存セッションを確認して弾く
+    # 既にログイン中の場合は、Cookieの既存セッションを確認して二重ログインを弾く
     current_user = get_current_user()
     if current_user:
         if current_user["user_id"] == user_row["user_id"]:
@@ -130,7 +130,8 @@ def login():
         return jsonify({"error": "既に別のアカウントでログインしています。ログアウトしてからお試しください"}), 409
 
     try:
-        result = supabase.auth.sign_in_with_password({
+        # 共有クライアントのセッションを汚さないよう、使い捨てのクライアントでサインインする
+        result = create_auth_client().auth.sign_in_with_password({
             "email": user_row["auth_email"],
             "password": password,
         })
