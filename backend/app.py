@@ -8,6 +8,7 @@ from common.supabase_client import supabase
 
 from auth.routes import auth_bp
 from bot_creation.routes import bot_creation_bp
+from bot_chat.routes import bot_chat_bp 
 from products.routes import products_bp
 from categories.routes import categories_bp
 from botarena.routes import botarena_bp
@@ -34,6 +35,7 @@ def create_app():
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(bot_creation_bp, url_prefix="/api/bots")
+    app.register_blueprint(bot_chat_bp, url_prefix="/api/bots")
     app.register_blueprint(products_bp, url_prefix="/api/products")
     # レビューは商品に対するものなので /api/products/<chatbot_id>/reviews などに置く
     app.register_blueprint(reviews_bp, url_prefix="/api/products")
