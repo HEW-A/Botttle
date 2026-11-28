@@ -73,3 +73,8 @@ as $$
   limit p_limit
   offset p_offset;
 $$;
+
+-- anon / authenticated キーで直接呼ばれると、API側の limit の上限チェックを通らないため、
+-- 購入・レビューの関数とそろえて service_role(バックエンド)だけが実行できるようにする。
+revoke execute on function search_products(text, text[], smallint, integer, integer) from public, anon, authenticated;
+grant execute on function search_products(text, text[], smallint, integer, integer) to service_role;
