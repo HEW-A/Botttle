@@ -1,142 +1,114 @@
 <template>
-  <div class="font-['M_PLUS_1_Code']">
-    <div v-if="profile" class="mx-auto flex max-w-4xl flex-col gap-6 px-4 py-8 md:px-6">
-      <section class="grid grid-cols-1 gap-4 sm:grid-cols-[minmax(120px,176px)_1fr]">
-        <div class="flex aspect-square items-center justify-center rounded-lg border border-slate-300 bg-slate-100">
-          <span class="text-5xl font-bold text-slate-700">{{ initial }}</span>
-        </div>
-        <div class="flex flex-col gap-3 rounded-lg border border-slate-300 px-6 py-5">
-          <div class="flex flex-wrap items-start justify-between gap-3">
-            <div class="flex min-w-0 flex-col gap-1">
-              <h1 class="text-2xl font-bold text-slate-900">{{ profile.username }}</h1>
-              <span class="text-xs text-slate-500">@{{ profile.user_id }} ・ {{ memberSinceLabel }}</span>
-            </div>
-            <button
-              v-if="profile.is_self"
-              type="button"
-              class="flex-none rounded-md border border-blue-600 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50"
-              @click="openEdit"
-            >
-              プロフィールを編集
-            </button>
+  <CommonPageContainer v-if="profile" class="flex flex-col gap-6">
+    <section class="grid grid-cols-1 gap-4 sm:grid-cols-[minmax(120px,176px)_1fr]">
+      <div class="flex aspect-square items-center justify-center border border-slate-200 bg-primary-100" aria-hidden="true">
+        <span class="text-5xl font-bold text-primary-700">{{ initial }}</span>
+      </div>
+      <UCard :ui="{ body: 'flex flex-col gap-3 px-6 py-5 sm:px-6 sm:py-5' }">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div class="flex min-w-0 flex-col gap-1">
+            <h1 class="text-2xl font-bold text-slate-900">{{ profile.username }}</h1>
+            <span class="text-xs text-slate-500">@{{ profile.user_id }} ・ {{ memberSinceLabel }}</span>
           </div>
-          <p class="text-sm leading-loose whitespace-pre-wrap text-slate-700">
-            {{ profile.developer_profile || '自己紹介はまだ登録されていません。' }}
-          </p>
+          <UButton v-if="profile.is_self" variant="outline" class="flex-none" @click="openEdit">プロフィールを編集</UButton>
         </div>
-      </section>
+        <p class="text-sm leading-loose whitespace-pre-wrap text-slate-700">
+          {{ profile.developer_profile || '自己紹介はまだ登録されていません。' }}
+        </p>
+      </UCard>
+    </section>
 
-      <section class="grid grid-cols-1 gap-4 sm:grid-cols-2" :class="{ 'lg:grid-cols-3': profile.is_self }">
-        <NuxtLink :to="`/users/${profile.user_id}/created`" class="flex flex-col gap-2 rounded-lg border border-slate-300 p-5 hover:bg-slate-50">
-          <span class="text-sm font-bold text-slate-900">作成品・出品中</span>
-          <span class="text-xs text-slate-500">出品中 {{ profile.stats.listed_count }}件</span>
-        </NuxtLink>
-        <NuxtLink :to="`/users/${profile.user_id}/sales-history`" class="flex flex-col gap-2 rounded-lg border border-slate-300 p-5 hover:bg-slate-50">
-          <span class="text-sm font-bold text-slate-900">出品履歴</span>
-          <span class="text-xs text-slate-500">販売済 {{ profile.stats.sold_count }}件</span>
-        </NuxtLink>
-        <NuxtLink v-if="profile.is_self" :to="`/users/${profile.user_id}/purchase-history`" class="flex flex-col gap-2 rounded-lg border border-slate-300 p-5 hover:bg-slate-50">
-          <span class="text-sm font-bold text-slate-900">購入履歴</span>
-          <span class="text-xs text-slate-500">購入したボット {{ profile.purchase_count }}件</span>
-        </NuxtLink>
-      </section>
+    <section class="grid grid-cols-1 gap-4 sm:grid-cols-2" :class="{ 'lg:grid-cols-3': profile.is_self }">
+      <NuxtLink :to="`/users/${profile.user_id}/created`" class="flex flex-col gap-2 border border-slate-200 bg-white p-5 transition-colors hover:border-primary">
+        <span class="text-sm font-bold text-slate-900">作成品・出品中</span>
+        <span class="text-xs text-slate-500">出品中 {{ profile.stats.listed_count }}件</span>
+      </NuxtLink>
+      <NuxtLink :to="`/users/${profile.user_id}/sales-history`" class="flex flex-col gap-2 border border-slate-200 bg-white p-5 transition-colors hover:border-primary">
+        <span class="text-sm font-bold text-slate-900">出品履歴</span>
+        <span class="text-xs text-slate-500">販売済 {{ profile.stats.sold_count }}件</span>
+      </NuxtLink>
+      <NuxtLink
+        v-if="profile.is_self"
+        :to="`/users/${profile.user_id}/purchase-history`"
+        class="flex flex-col gap-2 border border-slate-200 bg-white p-5 transition-colors hover:border-primary"
+      >
+        <span class="text-sm font-bold text-slate-900">購入履歴</span>
+        <span class="text-xs text-slate-500">購入したボット {{ profile.purchase_count }}件</span>
+      </NuxtLink>
+    </section>
 
-      <section class="rounded-lg border border-slate-300">
-        <div class="flex items-center justify-between border-b border-slate-200 px-6 py-3.5">
-          <h2 class="text-[15px] font-bold text-slate-700">戦績サマリー</h2>
-          <span class="text-xs text-slate-500">BotArena 通算</span>
+    <UCard as="section" :ui="{ header: 'flex items-center justify-between px-6 py-3.5 sm:px-6', body: 'p-0 sm:p-0' }">
+      <template #header>
+        <CommonSectionTitle>戦績サマリー</CommonSectionTitle>
+        <span class="text-xs text-slate-500">BotArena 通算</span>
+      </template>
+      <div class="grid grid-cols-2" :class="profile.is_self ? 'sm:grid-cols-4' : 'sm:grid-cols-3'">
+        <div class="flex flex-col gap-1.5 border-r border-slate-200 px-6 py-5">
+          <span class="text-xs text-slate-500">勝利数</span>
+          <span class="text-3xl font-bold text-slate-900">{{ profile.stats.wins }}</span>
         </div>
-        <div class="grid grid-cols-2" :class="profile.is_self ? 'sm:grid-cols-4' : 'sm:grid-cols-3'">
-          <div class="flex flex-col gap-1.5 border-r border-slate-200 px-6 py-5">
-            <span class="text-xs text-slate-500">勝利数</span>
-            <span class="text-3xl font-bold text-slate-900">{{ profile.stats.wins }}</span>
-          </div>
-          <div class="flex flex-col gap-1.5 border-r border-slate-200 px-6 py-5">
-            <span class="text-xs text-slate-500">敗北数</span>
-            <span class="text-3xl font-bold text-slate-900">{{ profile.stats.losses }}</span>
-          </div>
-          <div
-            class="flex flex-col gap-1.5 px-6 py-5"
-            :class="{ 'border-r border-slate-200': profile.is_self }"
-          >
-            <span class="text-xs text-slate-500">勝率</span>
-            <span class="text-3xl font-bold text-blue-600">
-              {{ winRateLabel }}<span v-if="winRateLabel !== '-'" class="ml-0.5 text-base">%</span>
-            </span>
-          </div>
-          <div v-if="profile.is_self" class="flex flex-col gap-1.5 px-6 py-5">
-            <span class="text-xs text-slate-500">所持コイン</span>
-            <span class="text-3xl font-bold text-slate-900">
-              {{ profile.coin_balance.toLocaleString() }}<span class="ml-1 text-sm font-medium text-slate-500">BC</span>
-            </span>
-          </div>
+        <div class="flex flex-col gap-1.5 border-r border-slate-200 px-6 py-5">
+          <span class="text-xs text-slate-500">敗北数</span>
+          <span class="text-3xl font-bold text-slate-900">{{ profile.stats.losses }}</span>
         </div>
-      </section>
-
-      <div v-if="profile.is_self" class="flex justify-center pt-2">
-        <button
-          type="button"
-          class="w-full max-w-[320px] rounded-md border border-slate-700 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-700 hover:text-white"
-          @click="handleLogout"
+        <div
+          class="flex flex-col gap-1.5 px-6 py-5"
+          :class="{ 'border-r border-slate-200': profile.is_self }"
         >
-          ログアウト
-        </button>
+          <span class="text-xs text-slate-500">勝率</span>
+          <span class="text-3xl font-bold text-primary">
+            {{ winRateLabel }}<span v-if="winRateLabel !== '-'" class="ml-0.5 text-base">%</span>
+          </span>
+        </div>
+        <div v-if="profile.is_self" class="flex flex-col gap-1.5 px-6 py-5">
+          <span class="text-xs text-slate-500">所持コイン</span>
+          <span class="text-3xl font-bold text-slate-900">
+            {{ profile.coin_balance.toLocaleString() }}<span class="ml-1 text-sm font-normal text-slate-500">BC</span>
+          </span>
+        </div>
       </div>
+    </UCard>
+
+    <div v-if="profile.is_self" class="flex justify-center pt-2">
+      <UButton block variant="outline" class="max-w-80" @click="handleLogout">ログアウト</UButton>
     </div>
 
-    <div
-      v-if="editing"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 px-4"
-      @click="closeEdit"
+    <UModal
+      v-model:open="editing"
+      title="プロフィールを編集"
+      description="表示名と自己紹介を変更できます。"
+      :ui="{ footer: 'justify-end' }"
     >
-      <div class="flex w-full max-w-[480px] flex-col rounded-lg border border-slate-300 bg-white" @click.stop>
-        <div class="flex items-center justify-between border-b border-slate-200 px-6 py-4">
-          <h2 class="text-base font-bold text-slate-700">プロフィールを編集</h2>
-          <button type="button" aria-label="閉じる" class="text-slate-500 hover:text-slate-800" @click="closeEdit">
-            ✕
-          </button>
-        </div>
-        <div class="flex flex-col gap-4 px-6 py-5">
-          <label class="flex flex-col gap-1.5 text-xs font-medium text-slate-700">
-            表示名
-            <input
-              v-model="draftUsername"
-              type="text"
-              maxlength="20"
-              class="h-10 rounded-md border border-slate-300 px-3 text-sm text-slate-900 focus:border-blue-600 focus:outline focus:outline-2 focus:outline-blue-600"
-            />
-          </label>
-          <label class="flex flex-col gap-1.5 text-xs font-medium text-slate-700">
-            自己紹介
-            <textarea
-              v-model="draftBio"
-              rows="4"
-              maxlength="160"
-              class="rounded-md border border-slate-300 px-3 py-2.5 text-sm leading-relaxed text-slate-900 focus:border-blue-600 focus:outline focus:outline-2 focus:outline-blue-600"
-            ></textarea>
-            <span class="self-end text-[11px] font-normal text-slate-500">{{ draftBio.length }} / 160</span>
-          </label>
-          <p v-if="editError" class="text-sm text-red-500">{{ editError }}</p>
-        </div>
-        <div class="flex justify-end gap-2.5 border-t border-slate-200 px-6 py-3.5">
-          <button
-            type="button"
-            class="h-10 rounded-md border border-slate-300 px-4 text-sm text-slate-700 hover:bg-slate-100"
-            @click="closeEdit"
-          >
-            キャンセル
-          </button>
-          <button
-            type="button"
-            class="h-10 rounded-md bg-blue-600 px-5 text-sm font-medium text-white hover:bg-blue-700"
-            @click="save"
-          >
-            保存する
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
+      <!-- 閉じるボタンの既定のアイコンは外部(Iconify)から取得するため、SVG を直接描く -->
+      <template #close>
+        <UButton color="neutral" variant="ghost" size="sm" square aria-label="閉じる" class="absolute top-4 right-4">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </UButton>
+      </template>
+
+      <template #body>
+        <form id="profile-edit-form" class="flex flex-col gap-4" @submit.prevent="save">
+          <div class="flex flex-col gap-1.5">
+            <label for="profile-username" class="text-xs font-bold text-slate-700">表示名</label>
+            <UInput id="profile-username" v-model="draftUsername" class="w-full" :maxlength="20" autocomplete="nickname" />
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <label for="profile-bio" class="text-xs font-bold text-slate-700">自己紹介</label>
+            <UTextarea id="profile-bio" v-model="draftBio" class="w-full" :rows="4" :maxlength="160" />
+            <span class="self-end text-xs text-slate-500">{{ draftBio.length }} / 160</span>
+          </div>
+          <p v-if="editError" class="text-sm text-red-600">{{ editError }}</p>
+        </form>
+      </template>
+
+      <template #footer>
+        <UButton variant="ghost" @click="closeEdit">キャンセル</UButton>
+        <UButton type="submit" form="profile-edit-form">保存する</UButton>
+      </template>
+    </UModal>
+  </CommonPageContainer>
 </template>
 
 <script setup>
@@ -169,12 +141,6 @@ const profile = ref({
 
 useHead({
   title: `${profile.value.username} | botttle`,
-  link: [
-    {
-      rel: 'stylesheet',
-      href: 'https://fonts.googleapis.com/css2?family=M+PLUS+1+Code:wght@400;500;600;700&display=swap',
-    },
-  ],
 })
 
 const initial = computed(() => (profile.value?.username || '?').trim().charAt(0).toUpperCase())
