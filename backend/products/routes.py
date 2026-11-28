@@ -20,6 +20,11 @@ DEFAULT_LIMIT = 20
 MAX_LIMIT = 100
 PAGING_ERROR = f"limit は1〜{MAX_LIMIT}、offset は0以上の整数で指定してください"
 
+MAX_QUERY_LENGTH = 100
+MAX_TERMS = 10
+QUERY_TOO_LONG_ERROR = f"検索キーワードは{MAX_QUERY_LENGTH}文字以内で指定してください"
+TOO_MANY_TERMS_ERROR = f"検索キーワードは{MAX_TERMS}語以内で指定してください"
+
 # category.category_id は smallint で、1から採番される
 CATEGORY_ID_MIN = 1
 CATEGORY_ID_MAX = 32767
@@ -28,18 +33,34 @@ CATEGORY_ID_ERROR = f"category_id は{CATEGORY_ID_MIN}〜{CATEGORY_ID_MAX}の整
 CATEGORY_ID_PATTERN = re.compile(r"[0-9]+")
 
 
+# APIで返す商品の項目(一覧・検索・詳細で共通)。項目を増やすときはここに足す
+PRODUCT_FIELDS = (
+    "chatbot_id",
+    "bot_name",
+    "price",
+    "description",
+    "thumbnail_url",
+    "category_id",
+    "username",
+    "category_name",
+)
+
+
+def _pick_product_fields(row):
+    """平らな1行から、APIで返す項目だけを取り出す"""
+    return {field: row.get(field) for field in PRODUCT_FIELDS}
+
+
 def _to_product(row):
-    """DBの1行を、APIで返す8項目の辞書に変換する"""
-    return {
-        "chatbot_id": row["chatbot_id"],
-        "bot_name": row["bot_name"],
-        "price": row["price"],
-        "description": row["description"],
-        "thumbnail_url": row["thumbnail_url"],
-        "category_id": row.get("category_id"),
-        "username": (row.get("users") or {}).get("username"),
-        "category_name": (row.get("category") or {}).get("category_name"),
-    }
+    """一覧・詳細のクエリの1行を、APIで返す項目の辞書に変換する"""
+    # username / category_name は結合先のオブジェクトに入っているので、平らにしてから取り出す
+    return _pick_product_fields(
+        {
+            **row,
+            "username": (row.get("users") or {}).get("username"),
+            "category_name": (row.get("category") or {}).get("category_name"),
+        }
+    )
 
 
 def _parse_int(value, default):
@@ -94,6 +115,11 @@ def list_products():
     if category_id is False:
         return jsonify({"error": CATEGORY_ID_ERROR}), 400
 
+    # 検索フォームの送信時に q 付きで呼ばれる。未指定・空白だけなら通常の一覧を返す
+    keyword = request.args.get("q", "").strip()
+    if keyword:
+        return _search_products(keyword, category_id, limit, offset)
+
     query = _listed_products_query()
     if category_id is not None:
         # 存在しないIDの場合は、該当なしとして [] が返る
@@ -106,6 +132,38 @@ def list_products():
         .execute()
     )
     return jsonify([_to_product(row) for row in response.data])
+
+
+def _split_terms(query):
+    """空白(全角スペースも含む)で区切り、大文字・小文字違いの重複を除いた語のリストを返す"""
+    terms = {}
+    for term in query.split():
+        terms.setdefault(term.lower(), term)
+    return list(terms.values())
+
+
+def _search_products(query, category_id, limit, offset):
+    if len(query) > MAX_QUERY_LENGTH:
+        return jsonify({"error": QUERY_TOO_LONG_ERROR}), 400
+
+    terms = _split_terms(query)
+    if len(terms) > MAX_TERMS:
+        return jsonify({"error": TOO_MANY_TERMS_ERROR}), 400
+
+    # 並び順(bot_name の一致を優先)は supabase/migrations の search_products 関数で決める
+    response = supabase.rpc(
+        "search_products",
+        {
+            "p_query": query,
+            "p_terms": terms,
+            "p_category_id": category_id,
+            "p_limit": limit,
+            "p_offset": offset,
+        },
+    ).execute()
+
+    # 関数は username / category_name を結合済みの列として返すので、そのまま一覧と同じ項目を取り出す
+    return jsonify([_pick_product_fields(row) for row in response.data])
 
 
 @products_bp.route("/<chatbot_id>")

@@ -1,4 +1,5 @@
 from unittest.mock import MagicMock, call, patch
+from urllib.parse import quote
 
 import pytest
 
@@ -247,3 +248,176 @@ def test_get_product_normalizes_chatbot_id(client, raw_id):
 
     assert query.eq.call_args_list[-1] == call("chatbot_id", CHATBOT_ID)
     assert response.status_code == 200
+
+
+# ============================================================
+# 検索(一覧API に q を付けた場合)
+# ============================================================
+
+
+def _rpc_row(**overrides):
+    row = {
+        "chatbot_id": CHATBOT_ID,
+        "bot_name": "プログラミング先生",
+        "price": 500,
+        "description": "やさしく教えます",
+        "thumbnail_url": None,
+        "category_id": 3,
+        "username": "taro",
+        "category_name": "学習・教育型",
+    }
+    row.update(overrides)
+    return row
+
+
+def _set_search_rows(db, rows):
+    db.rpc.return_value.execute.return_value = _db_result(rows)
+
+
+def test_search_calls_rpc_and_returns_flat_items(client):
+    with patch("products.routes.supabase") as db:
+        _set_search_rows(db, [_rpc_row(extra="ignored")])
+
+        response = client.get("/api/products?q=プログラミング")
+
+        db.rpc.assert_called_once_with(
+            "search_products",
+            {
+                "p_query": "プログラミング",
+                "p_terms": ["プログラミング"],
+                "p_category_id": None,
+                "p_limit": 20,
+                "p_offset": 0,
+            },
+        )
+        db.table.assert_not_called()
+
+    assert response.status_code == 200
+    assert response.get_json() == [
+        {
+            "chatbot_id": CHATBOT_ID,
+            "bot_name": "プログラミング先生",
+            "price": 500,
+            "description": "やさしく教えます",
+            "thumbnail_url": None,
+            "category_id": 3,
+            "username": "taro",
+            "category_name": "学習・教育型",
+        }
+    ]
+
+
+def test_search_splits_terms_by_half_and_full_width_spaces(client):
+    with patch("products.routes.supabase") as db:
+        _set_search_rows(db, [])
+
+        response = client.get("/api/products", query_string={"q": "  プログラミング　簡単  Python "})
+
+        args = db.rpc.call_args.args[1]
+        assert args["p_query"] == "プログラミング　簡単  Python"
+        assert args["p_terms"] == ["プログラミング", "簡単", "Python"]
+
+    assert response.status_code == 200
+    assert response.get_json() == []
+
+
+def test_search_removes_duplicate_terms_ignoring_case(client):
+    with patch("products.routes.supabase") as db:
+        _set_search_rows(db, [])
+
+        client.get("/api/products", query_string={"q": "Python python 入門 PYTHON"})
+
+        assert db.rpc.call_args.args[1]["p_terms"] == ["Python", "入門"]
+
+
+def test_search_passes_special_characters_as_is(client):
+    with patch("products.routes.supabase") as db:
+        _set_search_rows(db, [])
+
+        client.get("/api/products", query_string={"q": "100% a_b (x,y)"})
+
+        assert db.rpc.call_args.args[1]["p_terms"] == ["100%", "a_b", "(x,y)"]
+
+
+def test_search_passes_limit_and_offset(client):
+    with patch("products.routes.supabase") as db:
+        _set_search_rows(db, [])
+
+        client.get("/api/products?q=bot&limit=5&offset=10")
+
+        args = db.rpc.call_args.args[1]
+        assert args["p_limit"] == 5
+        assert args["p_offset"] == 10
+
+
+@pytest.mark.parametrize("q", ["", "   ", "　"])
+def test_search_with_blank_query_returns_normal_list(client, q):
+    response, query, db = _get(client, f"/api/products?q={quote(q)}", [_db_row()])
+
+    db.rpc.assert_not_called()
+    query.range.assert_called_once_with(0, 19)
+
+    assert response.status_code == 200
+    assert len(response.get_json()) == 1
+
+
+def test_search_returns_400_for_too_long_query(client):
+    with patch("products.routes.supabase") as db:
+        response = client.get("/api/products", query_string={"q": "あ" * 101})
+
+        db.rpc.assert_not_called()
+
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "検索キーワードは100文字以内で指定してください"
+
+
+def test_search_accepts_query_of_max_length(client):
+    with patch("products.routes.supabase") as db:
+        _set_search_rows(db, [])
+
+        response = client.get("/api/products", query_string={"q": "あ" * 100})
+
+    assert response.status_code == 200
+
+
+def test_search_returns_400_for_too_many_terms(client):
+    q = " ".join(f"w{i}" for i in range(11))
+
+    with patch("products.routes.supabase") as db:
+        response = client.get("/api/products", query_string={"q": q})
+
+        db.rpc.assert_not_called()
+
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "検索キーワードは10語以内で指定してください"
+
+
+def test_search_checks_paging_before_query(client):
+    with patch("products.routes.supabase") as db:
+        response = client.get("/api/products?q=bot&limit=0")
+
+        db.rpc.assert_not_called()
+
+    assert response.status_code == 400
+    assert "limit" in response.get_json()["error"]
+
+
+def test_search_passes_category_id(client):
+    with patch("products.routes.supabase") as db:
+        _set_search_rows(db, [])
+
+        response = client.get("/api/products?q=bot&category_id=3")
+
+        assert db.rpc.call_args.args[1]["p_category_id"] == 3
+
+    assert response.status_code == 200
+
+
+def test_search_checks_category_before_query(client):
+    with patch("products.routes.supabase") as db:
+        response = client.get("/api/products?q=bot&category_id=abc")
+
+        db.rpc.assert_not_called()
+
+    assert response.status_code == 400
+    assert response.get_json()["error"] == CATEGORY_ID_ERROR
