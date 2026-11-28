@@ -148,12 +148,6 @@
         </template>
       </CommonPageHeader>
 
-      <div v-if="promptLog.length" class="mb-4 flex flex-col gap-1.5">
-        <div v-for="(p, i) in promptLog" :key="i" class="border border-primary-200 bg-primary-50 px-3 py-2 text-sm text-primary-800">
-          Q. {{ p.text }}
-        </div>
-      </div>
-
       <div class="mb-5 grid grid-cols-1 gap-4 md:grid-cols-2">
         <UCard
           v-for="pn in panels"
@@ -162,7 +156,7 @@
           class="flex h-105 flex-col"
           :ui="{
             header: 'flex items-center gap-2.5 px-4 py-3.5 sm:px-4',
-            body: 'flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto bg-slate-50 p-4 sm:p-4',
+            body: 'flex min-h-0 flex-1 flex-col p-0 sm:p-0',
           }"
         >
           <template #header>
@@ -179,10 +173,13 @@
             </div>
           </template>
 
-          <template v-for="(msg, i) in pn.messages" :key="i">
-            <CommonChatBubble v-if="msg.isText" sender="bot">{{ msg.text }}</CommonChatBubble>
-            <CommonTypingIndicator v-else />
-          </template>
+          <!-- 自分の質問(右)とボットの回答(左)を、A・B それぞれの欄に会話として並べる -->
+          <CommonChatLog class="bg-slate-50 p-4" :aria-label="`${pn.name}との会話`">
+            <template v-for="(msg, i) in pn.messages" :key="i">
+              <CommonTypingIndicator v-if="msg.role === 'typing'" />
+              <CommonChatBubble v-else :sender="msg.role">{{ msg.text }}</CommonChatBubble>
+            </template>
+          </CommonChatLog>
         </UCard>
       </div>
 
@@ -283,7 +280,6 @@ const sideB = ref(emptySide())
 const botA = ref(null)
 const botB = ref(null)
 const input = ref('')
-const promptLog = ref([])
 const msgA = ref([])
 const msgB = ref([])
 const exchanges = ref(0)
@@ -348,7 +344,6 @@ function enterArena(nextMode, a, b) {
   botA.value = a
   botB.value = b
   input.value = ''
-  promptLog.value = []
   msgA.value = []
   msgB.value = []
   exchanges.value = 0
@@ -424,22 +419,23 @@ function sendPrompt() {
   const a = botA.value
   const b = botB.value
 
-  promptLog.value.push({ text })
-  msgA.value.push({ isText: false })
-  msgB.value.push({ isText: false })
+  // 各欄のメッセージは { role: 'user' | 'bot' | 'typing', text }。
+  // 自分の質問を両方の欄に出し、その下に入力中の表示を置いて、回答が来たら置き換える
+  msgA.value.push({ role: 'user', text }, { role: 'typing' })
+  msgB.value.push({ role: 'user', text }, { role: 'typing' })
   input.value = ''
   sending.value = true
 
   schedule(
     () => {
-      msgA.value.splice(-1, 1, { isText: true, text: pickResponse(a.category, seed) })
+      msgA.value.splice(-1, 1, { role: 'bot', text: pickResponse(a.category, seed) })
     },
     900 + Math.random() * 500,
   )
 
   schedule(
     () => {
-      msgB.value.splice(-1, 1, { isText: true, text: pickResponse(b.category, seed + 1) })
+      msgB.value.splice(-1, 1, { role: 'bot', text: pickResponse(b.category, seed + 1) })
       sending.value = false
       exchanges.value += 1
     },

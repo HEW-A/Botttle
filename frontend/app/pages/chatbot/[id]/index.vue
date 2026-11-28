@@ -26,7 +26,7 @@
         class="flex h-[calc(100vh-7rem)] flex-col lg:sticky lg:top-20"
         :ui="{
           header: 'flex flex-col gap-2.5 px-5 py-4 sm:px-5',
-          body: 'flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto bg-slate-50 px-5 py-4 sm:px-5 sm:py-4',
+          body: 'flex min-h-0 flex-1 flex-col p-0 sm:p-0',
           footer: 'px-5 py-3.5 sm:px-5',
         }"
       >
@@ -41,10 +41,12 @@
           </div>
         </template>
 
-        <CommonChatBubble v-for="(msg, index) in messages" :key="index" :sender="msg.role" :avatar="botInitial">
-          {{ msg.text }}
-        </CommonChatBubble>
-        <CommonTypingIndicator v-if="isSending" :avatar="botInitial" />
+        <CommonChatLog class="bg-slate-50 px-5 py-4" aria-label="お試しチャットの会話">
+          <CommonChatBubble v-for="(msg, index) in messages" :key="index" :sender="msg.role" :avatar="botInitial">
+            {{ msg.text }}
+          </CommonChatBubble>
+          <CommonTypingIndicator v-if="isSending" :avatar="botInitial" />
+        </CommonChatLog>
 
         <template #footer>
           <!-- form にして Enter で送信する(日本語の変換確定の Enter では送信されない) -->

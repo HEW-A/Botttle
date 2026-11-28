@@ -64,6 +64,7 @@
 | セクション見出し | `CommonSectionTitle`（`size`: md＝カードの中 / lg＝ページに直接並べるセクション） |
 | チャットの吹き出し | `CommonChatBubble`（`sender="user" \| "bot"`、`avatar` に 1 文字。形は上の「吹き出しピル」） |
 | 入力中の表示 | `CommonTypingIndicator`（`avatar` は `CommonChatBubble` と同じ） |
+| チャットの表示欄 | `CommonChatLog`（吹き出しをこの中に並べる。中身が増えると自動で一番下までスクロールする。高さは親で決める） |
 
 ボタンは上の3種類（`primary` の solid / outline / ghost）を使います。無効時（`disabled`）のグレー表示はこの3種類にだけ設定しています。
 それ以外の色・variant（`color="error"` や `variant="soft"` など）は Nuxt UI 標準の「少し薄くなる」表示になるので、使う場合は無効時の見た目を確認してください。
