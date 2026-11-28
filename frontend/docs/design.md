@@ -74,6 +74,9 @@
 |---|---|
 | `default` | 通常の画面（ヘッダー・フッター付き）。ページ側でヘッダー・フッター・背景色を書かない |
 | `auth` | ログイン・新規登録（ヘッダーなし、中央寄せ）。`definePageMeta({ layout: 'auth' })` |
+| `landing` | トップページ（LP）。ヘッダーは常にゲスト表示で、検索・ランキングを出さない。背景は白。`definePageMeta({ layout: 'landing' })` |
+
+LP のヒーロー見出しだけは、ページ見出し（`text-2xl`）より大きくしてよいことにしています（`text-4xl` / `md:text-5xl`）。
 
 `layout: false` にしてページ内で `CommonAppHeader` を書く作り方は、今後は使いません（既存の画面は順次移行します）。
 
