@@ -1,9 +1,30 @@
 <template>
   <div class="font-['M_PLUS_1_Code']">
-    <div v-if="profile" class="mx-auto flex max-w-4xl flex-col gap-6 px-4 py-8 md:px-6">
+    <div v-if="loading" class="mx-auto max-w-4xl px-4 py-16 text-center text-sm text-slate-500">
+      プロフィールを読み込んでいます…
+    </div>
+
+    <div v-else-if="loadError" class="mx-auto max-w-4xl px-4 py-16 text-center">
+      <p class="text-sm text-red-600">{{ loadError }}</p>
+      <button
+        type="button"
+        class="mt-4 rounded-md border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+        @click="loadProfile"
+      >
+        再読み込み
+      </button>
+    </div>
+
+    <div v-else-if="profile" class="mx-auto flex max-w-4xl flex-col gap-6 px-4 py-8 md:px-6">
       <section class="grid grid-cols-1 gap-4 sm:grid-cols-[minmax(120px,176px)_1fr]">
         <div class="flex aspect-square items-center justify-center rounded-lg border border-slate-300 bg-slate-100">
-          <span class="text-5xl font-bold text-slate-700">{{ initial }}</span>
+          <img
+            v-if="profile.profile_image_url"
+            :src="profile.profile_image_url"
+            :alt="`${profile.username}のプロフィール画像`"
+            class="h-full w-full rounded-lg object-cover"
+          />
+          <span v-else class="text-5xl font-bold text-slate-700">{{ initial }}</span>
         </div>
         <div class="flex flex-col gap-3 rounded-lg border border-slate-300 px-6 py-5">
           <div class="flex flex-wrap items-start justify-between gap-3">
@@ -128,10 +149,11 @@
           </button>
           <button
             type="button"
-            class="h-10 rounded-md bg-blue-600 px-5 text-sm font-medium text-white hover:bg-blue-700"
+            :disabled="saving"
+            class="h-10 rounded-md bg-blue-600 px-5 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
             @click="save"
           >
-            保存する
+            {{ saving ? '保存中…' : '保存する' }}
           </button>
         </div>
       </div>
@@ -140,42 +162,32 @@
 </template>
 
 <script setup>
-// バックエンドAPIは未実装のため、ユーザーが誰であっても同じモックデータを表示する
-// (デザインのデフォルト状態=本人ビューを踏襲。実データ連携は別途行う)
 const USER_ID_FORMAT_RE = /^[A-Za-z0-9][A-Za-z0-9_]{2,19}$/
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const config = useRuntimeConfig()
 
-const userIdParam = route.params.user_id
+const userIdParam = computed(() => String(route.params.user_id))
 
-if (!USER_ID_FORMAT_RE.test(userIdParam)) {
+if (!USER_ID_FORMAT_RE.test(userIdParam.value)) {
   throw createError({ statusCode: 404, statusMessage: 'ユーザーが見つかりません' })
 }
 
-const profile = ref({
-  user_id: userIdParam,
-  username: 'Testman',
-  developer_profile:
-    '会話型ボットを中心に制作しています。BotArenaではロジック対戦系が得意。\n業務効率化・英会話練習向けのボットを出品中です。',
-  profile_image_url: null,
-  created_at: '2025-04-12T00:00:00+00:00',
-  is_self: true,
-  stats: { listed_count: 5, sold_count: 23, wins: 128, losses: 54 },
-  purchase_count: 9,
-  coin_balance: 12480,
-})
+const profile = ref(null)
+const loading = ref(true)
+const loadError = ref('')
 
-useHead({
-  title: `${profile.value.username} | botttle`,
+useHead(() => ({
+  title: profile.value ? `${profile.value.username} | botttle` : 'ユーザープロフィール | botttle',
   link: [
     {
       rel: 'stylesheet',
       href: 'https://fonts.googleapis.com/css2?family=M+PLUS+1+Code:wght@400;500;600;700&display=swap',
     },
   ],
-})
+}))
 
 const initial = computed(() => (profile.value?.username || '?').trim().charAt(0).toUpperCase())
 
@@ -194,6 +206,31 @@ const editing = ref(false)
 const draftUsername = ref('')
 const draftBio = ref('')
 const editError = ref('')
+const saving = ref(false)
+
+function apiErrorMessage(error, fallback) {
+  return error?.data?.error || fallback
+}
+
+async function loadProfile() {
+  loading.value = true
+  loadError.value = ''
+  profile.value = null
+  try {
+    profile.value = await $fetch(`/api/users/${userIdParam.value}`, {
+      baseURL: config.public.apiBase,
+      credentials: 'include',
+    })
+  } catch (error) {
+    if (error?.statusCode === 404 || error?.status === 404) {
+      showError({ statusCode: 404, statusMessage: 'ユーザーが見つかりません' })
+      return
+    }
+    loadError.value = apiErrorMessage(error, 'プロフィールの読み込みに失敗しました。')
+  } finally {
+    loading.value = false
+  }
+}
 
 function openEdit() {
   draftUsername.value = profile.value.username
@@ -206,8 +243,8 @@ function closeEdit() {
   editing.value = false
 }
 
-// バックエンド未実装のため、保存は画面上のモックデータを書き換えるだけ
-function save() {
+async function save() {
+  if (saving.value) return
   editError.value = ''
   const username = draftUsername.value.trim()
   if (!username) {
@@ -215,13 +252,41 @@ function save() {
     return
   }
 
-  profile.value.username = username
-  profile.value.developer_profile = draftBio.value
-  editing.value = false
+  saving.value = true
+  try {
+    const result = await $fetch(`/api/users/${userIdParam.value}`, {
+      baseURL: config.public.apiBase,
+      method: 'PATCH',
+      credentials: 'include',
+      body: {
+        username,
+        developer_profile: draftBio.value,
+      },
+    })
+    profile.value.username = result.username
+    profile.value.developer_profile = result.developer_profile
+    await authStore.fetchMe()
+    editing.value = false
+  } catch (error) {
+    editError.value = apiErrorMessage(error, 'プロフィールの保存に失敗しました。')
+  } finally {
+    saving.value = false
+  }
 }
 
 async function handleLogout() {
   await authStore.logout()
   router.push('/')
 }
+
+onMounted(loadProfile)
+
+watch(userIdParam, (value) => {
+  if (!USER_ID_FORMAT_RE.test(value)) {
+    showError({ statusCode: 404, statusMessage: 'ユーザーが見つかりません' })
+    return
+  }
+  editing.value = false
+  loadProfile()
+})
 </script>

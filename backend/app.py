@@ -16,7 +16,7 @@ from listings.routes import listings_bp
 from reviews.routes import reviews_bp
 from purchases.routes import purchases_bp
 from coins.routes import coins_bp
-from users.test import users_bp
+from users.routes import users_bp
 from common.test import common_bp
 
 # backend/.env ファイルを読み込み、以降の os.getenv() で値を使えるようにする
